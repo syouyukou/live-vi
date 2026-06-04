@@ -98,13 +98,22 @@ export class ViRenderer {
     return all;
   }
 
-  createMaterial(opacity, depthWrite, instanceIndex, outline = false) {
+  createMaterial(opacity, depthWrite, instanceIndex, outline = false, unitShape = null) {
     const p = this.params;
-    const color = outline
-      ? new THREE.Color(p.outlineColor ?? "#ffd700")
-      : p.fillColor
-        ? new THREE.Color(p.fillColor)
-        : getMaterialColor(p.colorModeIndex, p.strokeColor, instanceIndex, p.seed);
+    const unit = unitShape ?? this.unitShape;
+    let color;
+    if (unit?.useSvgColors) {
+      const hex = outline
+        ? unit.outlineColor ?? unit.fillColor ?? "#111111"
+        : unit.fillColor ?? "#111111";
+      color = new THREE.Color(hex);
+    } else {
+      color = outline
+        ? new THREE.Color(p.outlineColor ?? "#ffd700")
+        : p.fillColor
+          ? new THREE.Color(p.fillColor)
+          : getMaterialColor(p.colorModeIndex, p.strokeColor, instanceIndex, p.seed);
+    }
     return new THREE.MeshBasicMaterial({
       color,
       transparent: opacity < 1,
@@ -151,19 +160,22 @@ export class ViRenderer {
     if (totalA === 0) return;
 
     const outlineBoost = p.outlineScale ?? 1.06;
-    const outlineA = new THREE.InstancedMesh(
-      this.unitShape.geometry,
-      this.createMaterial(1, true, 0, true),
-      totalA,
-    );
-    outlineA.renderOrder = 0;
-    this.contentGroup.add(outlineA);
-    this.instanceLayers.push(outlineA);
-    this.applyPlacementsToMesh(outlineA, placementsA, this.unitShape, 1, 0, outlineBoost);
+    const skipOutline = this.unitShape.useSvgColors && !this.unitShape.outlineColor;
+    if (!skipOutline) {
+      const outlineA = new THREE.InstancedMesh(
+        this.unitShape.geometry,
+        this.createMaterial(1, true, 0, true, this.unitShape),
+        totalA,
+      );
+      outlineA.renderOrder = 0;
+      this.contentGroup.add(outlineA);
+      this.instanceLayers.push(outlineA);
+      this.applyPlacementsToMesh(outlineA, placementsA, this.unitShape, 1, 0, outlineBoost);
+    }
 
     const mainA = new THREE.InstancedMesh(
       this.unitShape.geometry,
-      this.createMaterial(1, true, 0, false),
+      this.createMaterial(1, true, 0, false, this.unitShape),
       totalA,
     );
     mainA.renderOrder = 1;

@@ -152,7 +152,7 @@ document.getElementById("mouse-width").addEventListener("input", (e) => {
 document.getElementById("reset").addEventListener("click", resetAll);
 
 document.getElementById("timeline-editor").addEventListener("click", () => {
-  window.alert("Timeline Editor is locked in Ver. 0.1.2.");
+  window.alert("Timeline Editor is locked in Ver. 0.1.3.");
 });
 
 initUiLang(document.getElementById("lang-toggle"), (lang) => {

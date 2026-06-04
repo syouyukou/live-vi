@@ -18,6 +18,23 @@
 
 ---
 
+## [0.1.3] — 2026-06-04
+
+對應 Git tag：`v0.1.3`
+
+### Added
+
+- 側欄**拖曳調整寬度**（`sidebar-resize.js`）：180–520px、寫入 `localStorage`、鍵盤 ←/→、小螢幕自動停用
+- 元素 SVG：**描邊優先**解析、`viewBox` 寬高分開計算、依路徑跨度自動描邊粗細
+- `npm run test:unit-svg`：以 jsdom 驗證 `parseUnitSvg`（`public/test-fixtures/curve-2x.svg`）
+- 開發模式 `?testCurve=1` 可快速載入測試用曲線 SVG
+
+### Changed
+
+- 側欄寬度改由 CSS 變數 `--sidebar-width` 控制，與拖曳把手連動
+
+---
+
 ## [0.1.2] — 2026-06-04
 
 對應 Git tag：`v0.1.2`
@@ -85,7 +102,7 @@
 
 ### Known limitations（0.1.1 起沿用）
 
-- Timeline Editor UI 尚未開放（按鈕提示鎖定於 Ver. 0.1.2）
+- Timeline Editor UI 尚未開放（按鈕提示鎖定於目前版本）
 - `sensorTypeIndex` 僅 UI 預留，實際僅 mouse 模式
 - 無陀螺儀、音訊、麥克風、字型層、完整節點圖編輯器
 
@@ -117,6 +134,7 @@
 
 | 版本  | 日期       | Git tag    | 摘要 |
 |-------|------------|------------|------|
+| 0.1.3 | 2026-06-04 | `v0.1.3`   | 側欄拖曳寬度、SVG 描邊匯入改進、unit 測試 |
 | 0.1.2 | 2026-06-04 | `v0.1.2`   | 滑鼠方向跟隨、CHANGELOG、GitHub |
 | 0.1.1 | 2026-06    | —（回溯）  | 完整 Web VI Composer 基線 |
 | 0.1   | 2026-06    | —（回溯）  | Vite + Three 渲染雛形、路徑/符號管線起步 |
