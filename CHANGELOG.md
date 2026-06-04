@@ -25,7 +25,7 @@
 ### Added
 
 - 側欄**拖曳調整寬度**（`sidebar-resize.js`）：180–520px、寫入 `localStorage`、鍵盤 ←/→、小螢幕自動停用
-- 元素 SVG：**描邊優先**解析、`viewBox` 寬高分開計算、依路徑跨度自動描邊粗細
+- 元素 SVG：**描邊優先**解析、`viewBox` 寬高分開計算、依路徑跨度自動描邊粗細；匯入後可保留 SVG 填色（`useSvgColors`）
 - `npm run test:unit-svg`：以 jsdom 驗證 `parseUnitSvg`（`public/test-fixtures/curve-2x.svg`）
 - 開發模式 `?testCurve=1` 可快速載入測試用曲線 SVG
 
