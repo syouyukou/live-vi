@@ -10,6 +10,8 @@ import { formatLabel, initUiLang, UI_STRINGS } from "./ui/i18n.js";
 import { initSettingPanel } from "./ui/setting-panel.js";
 import { bindSliderPair } from "./ui/bind-controls.js";
 import { initSidebarResize } from "./ui/sidebar-resize.js";
+import { createUnitAssetLibrary } from "./lib/asset-library-idb.js";
+import { initElementImportPopover } from "./ui/element-import-popover.js";
 
 const params = defaultParams();
 const vi = new ViRenderer(document.getElementById("canvas-host"));
@@ -45,6 +47,53 @@ function applyPresetIndex(index) {
 }
 
 let uiLang = /** @type {import("./ui/i18n.js").UiLang} */ ("both");
+const unitAssetLibrary = createUnitAssetLibrary();
+
+/**
+ * @param {string} text
+ * @param {string} displayName
+ * @returns {boolean}
+ */
+function applyUnitSvg(text, displayName) {
+  const unit = parseUnitSvg(text);
+  if (!unit) {
+    const entry = UI_STRINGS["error.invalidElementSvg"];
+    window.alert(formatLabel(entry, uiLang));
+    return false;
+  }
+  params.hasCustomUnit = true;
+  const tinted = parseUnitSvg(text, { useSvgColors: true });
+  if (tinted?.fillColor) params.fillColor = tinted.fillColor;
+  if (tinted?.outlineColor) params.outlineColor = tinted.outlineColor;
+  vi.setUnit(unit);
+  updateReadyUi();
+  vi.markStructureDirty();
+  syncUiFromParams();
+  const hint = document.getElementById("element-import-name");
+  if (hint) {
+    hint.textContent = displayName;
+    hint.classList.remove("hidden");
+  }
+  return true;
+}
+
+/** @param {string} text @param {string} displayName */
+async function saveUnitAsset(text, displayName) {
+  const tinted = parseUnitSvg(text, { useSvgColors: true });
+  try {
+    await unitAssetLibrary.save({
+      displayName,
+      svgText: text,
+      meta: {
+        parseOk: true,
+        fillColor: tinted?.fillColor,
+        outlineColor: tinted?.outlineColor,
+      },
+    });
+  } catch (err) {
+    console.error("[unitAssetLibrary]", err);
+  }
+}
 
 const designPanel = initDesignPanel(params, {
   onPresetChange: applyPresetIndex,
@@ -53,20 +102,13 @@ const designPanel = initDesignPanel(params, {
     updateReadyUi();
     vi.markStructureDirty();
   },
-  onUnitSvg: (text) => {
-    const unit = parseUnitSvg(text);
-    if (!unit) {
-      const entry = UI_STRINGS["error.invalidElementSvg"];
-      window.alert(formatLabel(entry, uiLang));
-      return false;
-    }
-    params.hasCustomUnit = true;
-    vi.setUnit(unit);
-    updateReadyUi();
-    vi.markStructureDirty();
-    return true;
+  onUnitSvg: async (text, name) => {
+    const ok = applyUnitSvg(text, name);
+    if (ok) await saveUnitAsset(text, name);
+    return ok;
   },
   onStructureChange: () => vi.markStructureDirty(),
+  onColorChange: () => vi.updateColors(),
 });
 
 const settingPanel = initSettingPanel(params, {
@@ -155,8 +197,17 @@ document.getElementById("timeline-editor").addEventListener("click", () => {
   window.alert("Timeline Editor is locked in Ver. 0.1.3.");
 });
 
+const elementImportPopover = initElementImportPopover({
+  anchor: /** @type {HTMLElement} */ (document.getElementById("element-import")),
+  fileInput: /** @type {HTMLInputElement} */ (document.getElementById("element-svg-file")),
+  library: unitAssetLibrary,
+  onApply: (text, name) => applyUnitSvg(text, name),
+  getLang: () => uiLang,
+});
+
 initUiLang(document.getElementById("lang-toggle"), (lang) => {
   uiLang = lang;
+  elementImportPopover.refreshI18n();
 });
 
 initSidebarResize(document.querySelector(".composer-sidebar-resize"));

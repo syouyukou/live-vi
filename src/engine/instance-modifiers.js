@@ -32,12 +32,7 @@ export function instanceAngle(pathAngle, placement, params, mouse) {
   const elementRad = (params.elementAngleDeg * Math.PI) / 180;
   const base = pathAngle + elementRad;
 
-  if (
-    !params.mouseFollowDirection ||
-    !params.mouseEnabled ||
-    !mouse.active ||
-    !mouse.directionValid
-  ) {
+  if (!params.mouseFollowDirection || !params.mouseEnabled || !mouse.active) {
     return base;
   }
 
@@ -45,7 +40,8 @@ export function instanceAngle(pathAngle, placement, params, mouse) {
   if (inf <= 0) return base;
 
   const t = inf * params.mouseDirectionInfluence;
-  const towardMouse = (mouse.direction ?? 0) + elementRad;
+  const towardMouse =
+    Math.atan2(mouse.world.y - placement.y, mouse.world.x - placement.x) + elementRad;
   return lerpAngle(base, towardMouse, t);
 }
 
@@ -56,7 +52,7 @@ export function instanceAngle(pathAngle, placement, params, mouse) {
  */
 export function instanceScales(placement, params, mouse) {
   const r = seededRandom(params.seed * 0.31 + placement.index * 0.17);
-  const rnd = (r - 0.5) * 2 * params.randomnessMultiply * 0.12;
+  const rnd = (r - 0.5) * 2 * params.randomnessMultiply * 0.2;
 
   let scaleLen =
     params.baseScaleLength *

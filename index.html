@@ -122,6 +122,28 @@
                 <input type="number" id="el-pitch-num" class="composer-num" min="5" max="50" step="0.1" value="30.21" />
               </div>
             </div>
+            <div class="composer-color-block">
+              <p class="composer-sub-label" data-i18n="section.elementColor">Color</p>
+              <label class="composer-field composer-field-check composer-color-gradient-toggle">
+                <input type="checkbox" id="el-gradient" class="composer-check" />
+                <span class="composer-label" data-i18n="label.useGradient">Gradient</span>
+              </label>
+              <div id="el-gradient-map-wrap" class="gradient-map-wrap hidden">
+                <p class="composer-sub-label gradient-map-title" data-i18n="label.gradientMap">Gradient map</p>
+                <div id="el-gradient-map-root"></div>
+                <p class="gradient-map-hint" data-i18n="hint.gradientMap">Drag stops · diamonds adjust blend · double-click bar to add · double-click stop to remove</p>
+              </div>
+              <div class="composer-color-row" id="el-fill-row">
+                <span class="composer-label" data-i18n="label.fillColor">Fill</span>
+                <input type="color" id="el-fill-color" class="composer-color-swatch" value="#ff3388" aria-label="Fill color" />
+                <input type="text" id="el-fill-hex" class="composer-color-hex" value="#ff3388" maxlength="7" spellcheck="false" />
+              </div>
+              <div class="composer-color-row">
+                <span class="composer-label" data-i18n="label.outlineColor">Outline</span>
+                <input type="color" id="el-outline-color" class="composer-color-swatch" value="#ffd700" aria-label="Outline color" />
+                <input type="text" id="el-outline-hex" class="composer-color-hex" value="#ffd700" maxlength="7" spellcheck="false" />
+              </div>
+            </div>
             <input type="file" id="element-svg-file" accept=".svg,image/svg+xml" hidden />
             <button type="button" id="element-import" class="composer-action" data-i18n="action.importElementSvg">Import element .svg</button>
             <p id="element-import-name" class="composer-import-hint hidden" aria-live="polite"></p>

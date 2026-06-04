@@ -41,3 +41,37 @@ export function bindSliderPair(baseId, spec, onChange) {
 
   return { syncFromParams };
 }
+
+/**
+ * @param {string} baseId e.g. "el-fill" → #el-fill-color, #el-fill-hex
+ * @param {{ get: () => string, set: (hex: string) => void }} spec
+ * @param {() => void} [onChange]
+ */
+export function bindColorPair(baseId, spec, onChange) {
+  const color = document.getElementById(`${baseId}-color`);
+  const hex = document.getElementById(`${baseId}-hex`);
+  if (!color || !hex) return;
+
+  const syncFromParams = () => {
+    const v = spec.get();
+    color.value = v;
+    hex.value = v;
+  };
+
+  const apply = (raw) => {
+    let h = String(raw).trim();
+    if (!h.startsWith("#")) h = `#${h}`;
+    if (!/^#[0-9A-Fa-f]{6}$/i.test(h)) return;
+    h = h.toLowerCase();
+    spec.set(h);
+    color.value = h;
+    hex.value = h;
+    onChange?.();
+  };
+
+  color.addEventListener("input", (e) => apply(e.target.value));
+  hex.addEventListener("change", (e) => apply(e.target.value));
+  hex.addEventListener("input", (e) => apply(e.target.value));
+
+  return { syncFromParams };
+}

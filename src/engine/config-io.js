@@ -1,4 +1,5 @@
 import { defaultParams } from "./params.js";
+import { ensureGradientStops } from "./gradient-map.js";
 
 export function exportConfig(params, timeline, appFlow) {
   return JSON.stringify(
@@ -27,6 +28,11 @@ function applyKnownParams(source, params) {
   for (const key of Object.keys(source)) {
     if (key in known) params[key] = source[key];
   }
+  params.elementGradientStops = ensureGradientStops(
+    params.elementGradientStops,
+    params.fillColor,
+    params.gradientColorEnd,
+  );
 }
 
 export function importConfig(json, params, timeline, appFlow) {

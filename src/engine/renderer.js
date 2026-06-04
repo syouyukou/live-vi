@@ -3,6 +3,7 @@ import { deformPolyline } from "./deform.js";
 import { samplePlacements } from "./sampler.js";
 import { instanceAngle, instanceScales, lerpAngle } from "./instance-modifiers.js";
 import { getMaterialColor } from "./color-modes.js";
+import { ensureGradientStops, sampleGradientMap } from "./gradient-map.js";
 import { parseUnitSvg } from "./unit.js";
 
 export class ViRenderer {
@@ -98,21 +99,47 @@ export class ViRenderer {
     return all;
   }
 
-  createMaterial(opacity, depthWrite, instanceIndex, outline = false, unitShape = null) {
+  usesFillGradient() {
+    return Boolean(this.params?.elementUseGradient);
+  }
+
+  /** @param {import("./sampler.js").Placement} placement @param {number} instanceIndex */
+  resolveFillColor(placement, instanceIndex, unitShape = null) {
     const p = this.params;
     const unit = unitShape ?? this.unitShape;
-    let color;
+    if (unit?.useSvgColors && !p.elementUseGradient) {
+      return new THREE.Color(unit.fillColor ?? "#111111");
+    }
+    if (p.elementUseGradient) {
+      const stops = ensureGradientStops(
+        p.elementGradientStops,
+        p.fillColor,
+        p.gradientColorEnd,
+      );
+      return sampleGradientMap(placement?.t ?? 0, stops);
+    }
+    if (p.fillColor) return new THREE.Color(p.fillColor);
+    return getMaterialColor(p.colorModeIndex, p.strokeColor, instanceIndex, p.seed);
+  }
+
+  /** @param {import("./sampler.js").Placement} placement @param {number} instanceIndex */
+  resolveOutlineColor(placement, instanceIndex, unitShape = null) {
+    const p = this.params;
+    const unit = unitShape ?? this.unitShape;
     if (unit?.useSvgColors) {
-      const hex = outline
-        ? unit.outlineColor ?? unit.fillColor ?? "#111111"
-        : unit.fillColor ?? "#111111";
-      color = new THREE.Color(hex);
-    } else {
+      const hex = unit.outlineColor ?? unit.fillColor ?? "#111111";
+      return new THREE.Color(hex);
+    }
+    return new THREE.Color(p.outlineColor ?? "#ffd700");
+  }
+
+  createMaterial(opacity, depthWrite, instanceIndex, outline = false, unitShape = null, useInstanceColor = false) {
+    let color = 0xffffff;
+    if (!useInstanceColor) {
+      const placement = { t: 0, index: instanceIndex };
       color = outline
-        ? new THREE.Color(p.outlineColor ?? "#ffd700")
-        : p.fillColor
-          ? new THREE.Color(p.fillColor)
-          : getMaterialColor(p.colorModeIndex, p.strokeColor, instanceIndex, p.seed);
+        ? this.resolveOutlineColor(placement, instanceIndex, unitShape)
+        : this.resolveFillColor(placement, instanceIndex, unitShape);
     }
     return new THREE.MeshBasicMaterial({
       color,
@@ -121,6 +148,16 @@ export class ViRenderer {
       depthWrite,
       side: THREE.DoubleSide,
     });
+  }
+
+  /** @param {THREE.InstancedMesh} mesh @param {import("./sampler.js").Placement[]} placements */
+  applyFillInstanceColors(mesh, placements, unitShape = null) {
+    const attr = new THREE.InstancedBufferAttribute(new Float32Array(mesh.count * 3), 3);
+    for (let i = 0; i < placements.length; i++) {
+      this.resolveFillColor(placements[i], i, unitShape).toArray(attr.array, i * 3);
+    }
+    mesh.instanceColor = attr;
+    mesh.instanceColor.needsUpdate = true;
   }
 
   clearLayers() {
@@ -161,10 +198,11 @@ export class ViRenderer {
 
     const outlineBoost = p.outlineScale ?? 1.06;
     const skipOutline = this.unitShape.useSvgColors && !this.unitShape.outlineColor;
+    const fillGradient = this.usesFillGradient();
     if (!skipOutline) {
       const outlineA = new THREE.InstancedMesh(
         this.unitShape.geometry,
-        this.createMaterial(1, true, 0, true, this.unitShape),
+        this.createMaterial(1, true, 0, true, this.unitShape, false),
         totalA,
       );
       outlineA.renderOrder = 0;
@@ -175,13 +213,14 @@ export class ViRenderer {
 
     const mainA = new THREE.InstancedMesh(
       this.unitShape.geometry,
-      this.createMaterial(1, true, 0, false, this.unitShape),
+      this.createMaterial(1, true, 0, false, this.unitShape, fillGradient),
       totalA,
     );
     mainA.renderOrder = 1;
     this.contentGroup.add(mainA);
     this.instanceLayers.push(mainA);
     this.applyPlacementsToMesh(mainA, placementsA, this.unitShape, 1, 0);
+    if (fillGradient) this.applyFillInstanceColors(mainA, placementsA, this.unitShape);
 
     if (p.enableSecondLayer && this.unitShapeB) {
       const placementsB = this.collectPlacements(p.secondLayerPhase);
@@ -254,7 +293,10 @@ export class ViRenderer {
   }
 
   fitCamera() {
+    const zoom = this.contentGroup.scale.x;
+    this.contentGroup.scale.setScalar(1);
     const box = new THREE.Box3().setFromObject(this.contentGroup);
+    this.contentGroup.scale.setScalar(zoom);
     if (box.isEmpty()) return;
     const center = box.getCenter(new THREE.Vector3());
     const size = box.getSize(new THREE.Vector3());

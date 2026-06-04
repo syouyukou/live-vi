@@ -10,6 +10,8 @@
 
 ### Added
 
+- Element SVG 上傳歷史（IndexedDB）：點「匯入元素 .svg」顯示最近項目，可一鍵重用或選新檔案
+
 ### Changed
 
 ### Fixed

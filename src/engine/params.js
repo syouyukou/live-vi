@@ -1,3 +1,5 @@
+import { defaultGradientStops } from "./gradient-map.js";
+
 /** @typedef {ReturnType<typeof defaultParams>} ViParams */
 
 export function defaultParams() {
@@ -44,6 +46,9 @@ export function defaultParams() {
     colorModeIndex: 0,
     strokeColor: "#111111",
     fillColor: "#ff3388",
+    gradientColorEnd: "#3366ff",
+    elementGradientStops: defaultGradientStops(),
+    elementUseGradient: false,
     outlineColor: "#ffd700",
     outlineScale: 1.06,
     bgColor: "#ffffff",

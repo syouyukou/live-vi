@@ -299,6 +299,190 @@ body.composer-sidebar-resizing * {
   border-radius: 1px;
 }
 
+.composer-color-block {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid color-mix(in oklab, var(--border) 40%, transparent);
+}
+
+.composer-color-block .composer-sub-label {
+  margin: 0 0 6px;
+}
+
+.composer-color-gradient-toggle {
+  margin-bottom: 6px;
+}
+
+.composer-color-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 5px;
+}
+
+.composer-color-row .composer-label {
+  width: 88px;
+  flex-shrink: 0;
+  font-size: 10px;
+  line-height: 1.25;
+}
+
+.composer-color-swatch {
+  flex-shrink: 0;
+  width: 28px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid color-mix(in oklab, var(--border) 80%, transparent);
+  border-radius: 1px;
+  background: var(--input-bg);
+  cursor: pointer;
+}
+
+.composer-color-swatch::-webkit-color-swatch-wrapper {
+  padding: 2px;
+}
+
+.composer-color-swatch::-webkit-color-swatch {
+  border: none;
+  border-radius: 0;
+}
+
+.composer-color-hex {
+  flex: 1;
+  min-width: 0;
+  height: 22px;
+  padding: 2px 6px;
+  font: inherit;
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  background: var(--input-bg);
+  border: 1px solid color-mix(in oklab, var(--border) 80%, transparent);
+  border-radius: 1px;
+}
+
+.composer-color-swatch:focus-visible,
+.composer-color-hex:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* —— Gradient map —— */
+.gradient-map-wrap {
+  margin-bottom: 8px;
+}
+
+.gradient-map-wrap .gradient-map-title {
+  margin: 0 0 4px;
+  font-size: 10px;
+}
+
+.gradient-map-track-wrap {
+  position: relative;
+  padding: 12px 2px 18px;
+}
+
+.gradient-map-track {
+  height: 24px;
+  border-radius: 3px;
+  border: 1px solid color-mix(in oklab, var(--border) 85%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--text) 8%, transparent);
+  cursor: crosshair;
+}
+
+.gradient-map-track:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.gradient-map-midpoints,
+.gradient-map-stops {
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  height: 0;
+  pointer-events: none;
+}
+
+.gradient-map-midpoints {
+  top: 2px;
+}
+
+.gradient-map-stops {
+  bottom: 2px;
+}
+
+.gradient-map-mid,
+.gradient-map-stop {
+  position: absolute;
+  pointer-events: auto;
+  transform: translateX(-50%);
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: grab;
+  touch-action: none;
+}
+
+.gradient-map-mid:active,
+.gradient-map-stop:active {
+  cursor: grabbing;
+}
+
+.gradient-map-mid {
+  top: 0;
+  width: 10px;
+  height: 10px;
+  background: color-mix(in oklab, var(--text-muted) 70%, var(--input-bg));
+  border: 1px solid color-mix(in oklab, var(--border) 90%, var(--text));
+  transform: translateX(-50%) rotate(45deg);
+  border-radius: 1px;
+}
+
+.gradient-map-mid:focus-visible,
+.gradient-map-stop:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.gradient-map-stop {
+  bottom: 0;
+  width: 16px;
+  height: 14px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.gradient-map-stop-color {
+  display: block;
+  width: 14px;
+  height: 12px;
+  border: 1px solid color-mix(in oklab, var(--text) 35%, transparent);
+  clip-path: polygon(50% 0%, 100% 38%, 78% 100%, 22% 100%, 0% 38%);
+  box-shadow: 0 1px 2px color-mix(in oklab, var(--text) 25%, transparent);
+}
+
+.gradient-map-stop.is-selected .gradient-map-stop-color {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.gradient-map-hint {
+  margin: 4px 0 0;
+  font-size: 9px;
+  line-height: 1.35;
+  color: var(--text-muted);
+}
+
+.gradient-map-hidden-color {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
 .composer-field-stack {
   flex-direction: column;
   align-items: stretch;
@@ -339,6 +523,110 @@ body.composer-sidebar-resizing * {
   font-size: 10px;
   color: var(--text-muted);
   word-break: break-all;
+}
+
+.composer-import-popover {
+  position: fixed;
+  z-index: 40;
+  padding: 8px;
+  background: var(--sidebar-bg);
+  border: 1px solid var(--border);
+  box-shadow: 0 6px 20px color-mix(in oklab, var(--text) 18%, transparent);
+}
+
+.composer-import-popover-title {
+  margin: 0 0 6px;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.composer-import-popover-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.composer-import-popover-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 4px;
+  font: inherit;
+  font-size: 11px;
+  text-align: left;
+  color: var(--text);
+  background: transparent;
+  border: none;
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.composer-import-popover-item:hover,
+.composer-import-popover-item:focus-visible {
+  background: color-mix(in oklab, var(--input-bg) 70%, var(--accent) 8%);
+}
+
+.composer-import-popover-item:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.composer-import-popover-thumb {
+  flex: 0 0 28px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--canvas-paper);
+  border: 1px solid color-mix(in oklab, var(--border) 70%, transparent);
+}
+
+.composer-import-popover-thumb img {
+  max-width: 24px;
+  max-height: 24px;
+  object-fit: contain;
+}
+
+.composer-import-popover-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.composer-import-popover-empty {
+  margin: 0 0 6px;
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.composer-import-popover-pick {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  padding: 6px 8px;
+  font: inherit;
+  font-size: 11px;
+  color: var(--text);
+  background: var(--input-bg);
+  border: 1px solid color-mix(in oklab, var(--border) 80%, transparent);
+  cursor: pointer;
+  text-align: center;
+}
+
+.composer-import-popover-pick:hover {
+  background: color-mix(in oklab, var(--input-bg) 80%, var(--text-muted));
+}
+
+.composer-import-popover-pick:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .composer-section-title {
