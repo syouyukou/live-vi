@@ -9,6 +9,7 @@ import { applyCanvasLayout } from "./ui/canvas-layout.js";
 import { formatLabel, initUiLang, UI_STRINGS } from "./ui/i18n.js";
 import { initSettingPanel } from "./ui/setting-panel.js";
 import { bindSliderPair } from "./ui/bind-controls.js";
+import { initSidebarResize } from "./ui/sidebar-resize.js";
 
 const params = defaultParams();
 const vi = new ViRenderer(document.getElementById("canvas-host"));
@@ -151,12 +152,14 @@ document.getElementById("mouse-width").addEventListener("input", (e) => {
 document.getElementById("reset").addEventListener("click", resetAll);
 
 document.getElementById("timeline-editor").addEventListener("click", () => {
-  window.alert("Timeline Editor is locked in Ver. 0.2.1.");
+  window.alert("Timeline Editor is locked in Ver. 0.1.2.");
 });
 
 initUiLang(document.getElementById("lang-toggle"), (lang) => {
   uiLang = lang;
 });
+
+initSidebarResize(document.querySelector(".composer-sidebar-resize"));
 
 const canvas = vi.getCanvas();
 canvas.addEventListener("pointermove", (e) => {
@@ -197,3 +200,24 @@ vi.resize();
 vi.render();
 seedMouseCenter();
 requestAnimationFrame(loop);
+
+if (import.meta.env.DEV && new URLSearchParams(location.search).has("testCurve")) {
+  fetch("/test-fixtures/curve-2x.svg")
+    .then((r) => r.text())
+    .then((text) => {
+      const unit = parseUnitSvg(text);
+      if (unit) {
+        params.hasCustomUnit = true;
+        vi.setUnit(unit);
+        const hint = document.getElementById("element-import-name");
+        if (hint) {
+          hint.textContent = "curve-2x.svg (test)";
+          hint.classList.remove("hidden");
+        }
+        vi.markStructureDirty();
+        vi.render();
+        console.info("[testCurve] loaded test-fixtures/curve-2x.svg");
+      }
+    })
+    .catch((err) => console.error("[testCurve]", err));
+}
