@@ -1,0 +1,459 @@
+/* VI Composer — light shell */
+
+:root {
+  --app-bg: #ebebeb;
+  --sidebar-bg: #ebebeb;
+  --text: #2d2d2d;
+  --text-muted: #6b7280;
+  --border: #b8b8b8;
+  --accent: #c53030;
+  --input-bg: #d4d4d4;
+  --canvas-paper: #ffffff;
+  --fill-pink: #ff3388;
+  --stroke-gold: #ffd700;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  font-family: "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
+  font-weight: 300;
+  font-size: 12px;
+  color: var(--text);
+  background: var(--app-bg);
+}
+
+.palt {
+  font-feature-settings: "palt";
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* —— Layout —— */
+.composer-app {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  background: var(--app-bg);
+}
+
+.composer-sidebar {
+  flex: 0 0 20%;
+  min-width: 200px;
+  max-width: 300px;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 16px 12px;
+  border-right: 1px solid var(--border);
+  background: var(--sidebar-bg);
+  overflow-y: auto;
+}
+
+.composer-stage {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: var(--app-bg);
+}
+
+.composer-canvas-wrap {
+  position: relative;
+  flex-shrink: 0;
+  background: var(--canvas-paper);
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--border) 60%, transparent);
+}
+
+#canvas-host,
+#canvas-host canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.composer-canvas-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: var(--text-muted);
+  pointer-events: none;
+  background: var(--canvas-paper);
+}
+
+/* —— Panel switch —— */
+.composer-panel-switch {
+  display: block;
+  margin-bottom: 18px;
+}
+
+.composer-panel-switch .composer-select {
+  max-width: none;
+  width: 100%;
+  border-color: color-mix(in oklab, var(--border) 80%, transparent);
+}
+
+.composer-panel-switch.is-setting .composer-select {
+  border-color: var(--accent);
+}
+
+.composer-btn-row {
+  display: flex;
+  gap: 6px;
+}
+
+.composer-btn-row .composer-action {
+  flex: 1;
+  margin-top: 0;
+}
+
+.composer-sub-label {
+  margin: 8px 0 4px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.composer-preset-row {
+  display: flex;
+  gap: 4px;
+}
+
+.composer-preset-btn {
+  flex: 1;
+  padding: 5px 4px;
+  font: inherit;
+  font-size: 11px;
+  color: var(--text);
+  background: var(--input-bg);
+  border: 1px solid color-mix(in oklab, var(--border) 80%, transparent);
+  cursor: pointer;
+  text-align: center;
+}
+
+.composer-preset-btn.is-active {
+  border-color: var(--text);
+  font-weight: 500;
+}
+
+.composer-preset-btn:hover {
+  background: color-mix(in oklab, var(--input-bg) 80%, var(--text-muted));
+}
+
+.composer-preset-btn:focus-visible,
+.composer-reset:focus-visible,
+.composer-select:focus-visible,
+.composer-input:focus-visible,
+.composer-num:focus-visible,
+.composer-footer-btn:focus-visible,
+.composer-lang:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* —— Panel —— */
+.composer-panel {
+  flex: 1;
+  min-height: 0;
+}
+
+.composer-panel-note {
+  margin: 0;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.composer-section {
+  margin-bottom: 16px;
+}
+
+.composer-section-block {
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid color-mix(in oklab, var(--border) 55%, transparent);
+}
+
+.composer-param {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 5px;
+}
+
+.composer-param .composer-label {
+  width: 88px;
+  line-height: 1.25;
+  font-size: 10px;
+}
+
+.composer-param-control {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.composer-slider {
+  flex: 1;
+  min-width: 0;
+  height: 4px;
+  margin: 0;
+  appearance: none;
+  background: color-mix(in oklab, var(--input-bg) 70%, var(--border));
+  border-radius: 0;
+  cursor: pointer;
+}
+
+.composer-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 0;
+  background: var(--text-muted);
+  border: 1px solid var(--border);
+  cursor: pointer;
+}
+
+.composer-slider::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+  border-radius: 0;
+  background: var(--text-muted);
+  border: 1px solid var(--border);
+  cursor: pointer;
+}
+
+.composer-slider:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.composer-num {
+  flex-shrink: 0;
+  width: 52px;
+  height: 22px;
+  padding: 2px 4px;
+  font: inherit;
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  color: var(--text);
+  background: var(--input-bg);
+  border: 1px solid color-mix(in oklab, var(--border) 80%, transparent);
+  border-radius: 1px;
+}
+
+.composer-field-stack {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.composer-select-wide {
+  max-width: none;
+  width: 100%;
+}
+
+.composer-action {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  padding: 6px 8px;
+  font: inherit;
+  font-size: 11px;
+  color: var(--text);
+  background: var(--input-bg);
+  border: 1px solid color-mix(in oklab, var(--border) 80%, transparent);
+  cursor: pointer;
+  text-align: center;
+}
+
+.composer-action:hover {
+  background: color-mix(in oklab, var(--input-bg) 80%, var(--text-muted));
+}
+
+.composer-action:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.composer-import-hint {
+  margin: 4px 0 0;
+  font-size: 10px;
+  color: var(--text-muted);
+  word-break: break-all;
+}
+
+.composer-section-title {
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.composer-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.composer-field-check {
+  justify-content: flex-start;
+  gap: 8px;
+}
+
+.composer-field-check .composer-check {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  accent-color: var(--accent, #a855f7);
+}
+
+.composer-field-inline {
+  margin-bottom: 8px;
+}
+
+.composer-label {
+  flex-shrink: 0;
+  font-size: 10px;
+  line-height: 1.25;
+  color: var(--text-muted);
+}
+
+.composer-field .composer-label {
+  max-width: 46%;
+}
+
+.composer-select,
+.composer-input {
+  flex: 1;
+  max-width: 120px;
+  min-width: 72px;
+  height: 22px;
+  padding: 2px 6px;
+  font: inherit;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  background: var(--input-bg);
+  border: 1px solid color-mix(in oklab, var(--border) 80%, transparent);
+  border-radius: 1px;
+}
+
+.composer-select {
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath fill='%236b7280' d='M0 0l4 5 4-5z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 6px center;
+  padding-right: 18px;
+}
+
+.composer-reset {
+  margin-top: 8px;
+  padding: 0;
+  font: inherit;
+  font-size: 12px;
+  color: var(--accent);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+}
+
+.composer-reset:hover {
+  text-decoration: underline;
+}
+
+/* —— Footer —— */
+.composer-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid color-mix(in oklab, var(--border) 50%, transparent);
+}
+
+.composer-footer-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 0;
+  font: inherit;
+  font-size: 10px;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.composer-timeline-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  font-size: 14px;
+  line-height: 1;
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+
+.composer-lang {
+  min-width: 40px;
+  height: 22px;
+  padding: 0 8px;
+  font: inherit;
+  font-size: 11px;
+  color: var(--text);
+  background: var(--input-bg);
+  border: 1px solid color-mix(in oklab, var(--border) 80%, transparent);
+  cursor: pointer;
+}
+
+.composer-lang[aria-pressed="true"] {
+  font-weight: 500;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+}
+
+@media (max-width: 720px) {
+  .composer-app {
+    flex-direction: column;
+  }
+  .composer-sidebar {
+    flex: 0 0 auto;
+    max-width: none;
+    width: 100%;
+    max-height: 45vh;
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .composer-stage {
+    flex: 1;
+    min-height: 0;
+    padding: 12px;
+  }
+}

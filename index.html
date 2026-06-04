@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>VI Composer</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/geist@1.3.1/dist/geist.css" />
+    <link rel="stylesheet" href="/src/style.css" />
+  </head>
+  <body class="antialiased palt">
+    <div class="composer-app">
+      <aside class="composer-sidebar">
+        <label class="composer-panel-switch">
+          <select id="panel-select" class="composer-select composer-select-wide" aria-label="Panel">
+            <option value="setting" data-i18n="nav.setting">Setting</option>
+            <option value="design" data-i18n="nav.design" selected>Design</option>
+          </select>
+        </label>
+
+        <div id="panel-setting" class="composer-panel hidden" hidden>
+          <section class="composer-section composer-section-block">
+            <h2 class="composer-section-title" data-i18n="section.importExport">Import & Export</h2>
+            <input type="file" id="config-json-file" accept=".json,application/json" hidden />
+            <div class="composer-btn-row">
+              <button type="button" id="config-import" class="composer-action" data-i18n="action.importJson">Import .json</button>
+              <button type="button" id="config-export" class="composer-action" data-i18n="action.exportJson">Export .json</button>
+            </div>
+          </section>
+
+          <section class="composer-section">
+            <h2 class="composer-section-title" data-i18n="section.canvasSize">Canvas Size</h2>
+            <label class="composer-field">
+              <span class="composer-label" data-i18n="label.width">Width</span>
+              <input type="number" id="canvas-width" class="composer-input" min="64" max="4096" step="1" value="540" />
+            </label>
+            <label class="composer-field">
+              <span class="composer-label" data-i18n="label.height">Height</span>
+              <input type="number" id="canvas-height" class="composer-input" min="64" max="4096" step="1" value="540" />
+            </label>
+            <p class="composer-sub-label" data-i18n="label.preset">Preset</p>
+            <div class="composer-preset-row" role="group" aria-label="Aspect ratio preset">
+              <button type="button" class="composer-preset-btn" data-canvas-preset="16:9" data-i18n="preset.16x9">16:9</button>
+              <button type="button" class="composer-preset-btn" data-canvas-preset="9:16" data-i18n="preset.9x16">9:16</button>
+              <button type="button" class="composer-preset-btn is-active" data-canvas-preset="1:1" data-i18n="preset.1x1">1:1</button>
+            </div>
+          </section>
+        </div>
+
+        <div id="panel-design" class="composer-panel">
+          <section class="composer-section composer-section-block">
+            <h2 class="composer-section-title" data-i18n="section.shape">Shape</h2>
+            <div class="composer-param">
+              <span class="composer-label" data-i18n="label.size">Size</span>
+              <div class="composer-param-control">
+                <input type="range" id="shape-size-slider" class="composer-slider" min="4" max="25" step="0.1" value="15.2" />
+                <input type="number" id="shape-size-num" class="composer-num" min="4" max="25" step="0.1" value="15.20" />
+              </div>
+            </div>
+            <div class="composer-param">
+              <span class="composer-label" data-i18n="label.modify">Modify</span>
+              <div class="composer-param-control">
+                <input type="range" id="shape-modify-slider" class="composer-slider" min="0" max="0.4" step="0.01" value="0" />
+                <input type="number" id="shape-modify-num" class="composer-num" min="0" max="0.4" step="0.01" value="0.00" />
+              </div>
+            </div>
+            <div class="composer-param">
+              <span class="composer-label" data-i18n="label.rotate">Rotate</span>
+              <div class="composer-param-control">
+                <input type="range" id="shape-rotate-slider" class="composer-slider" min="-3.14" max="3.14" step="0.01" value="0.36" />
+                <input type="number" id="shape-rotate-num" class="composer-num" min="-3.14" max="3.14" step="0.01" value="0.36" />
+              </div>
+            </div>
+            <div class="composer-param">
+              <span class="composer-label" data-i18n="label.posX">Pos X</span>
+              <div class="composer-param-control">
+                <input type="range" id="shape-pos-x-slider" class="composer-slider" min="-5" max="5" step="0.01" value="-0.05" />
+                <input type="number" id="shape-pos-x-num" class="composer-num" min="-5" max="5" step="0.01" value="-0.05" />
+              </div>
+            </div>
+            <div class="composer-param">
+              <span class="composer-label" data-i18n="label.posY">Pos Y</span>
+              <div class="composer-param-control">
+                <input type="range" id="shape-pos-y-slider" class="composer-slider" min="-5" max="5" step="0.01" value="-0.04" />
+                <input type="number" id="shape-pos-y-num" class="composer-num" min="-5" max="5" step="0.01" value="-0.04" />
+              </div>
+            </div>
+            <label class="composer-field composer-field-stack">
+              <span class="composer-label" data-i18n="label.shape">Shape</span>
+              <select id="shape-preset" class="composer-select composer-select-wide"></select>
+            </label>
+            <input type="file" id="shape-svg-file" accept=".svg,image/svg+xml" hidden />
+            <button type="button" id="shape-import" class="composer-action" data-i18n="action.importSvg">Import .svg</button>
+          </section>
+
+          <section class="composer-section composer-section-block">
+            <h2 class="composer-section-title" data-i18n="section.element">Element</h2>
+            <div class="composer-param">
+              <span class="composer-label" data-i18n="label.angle">Angle</span>
+              <div class="composer-param-control">
+                <input type="range" id="el-angle-slider" class="composer-slider" min="0" max="360" step="0.1" value="149.7" />
+                <input type="number" id="el-angle-num" class="composer-num" min="0" max="360" step="0.1" value="149.70" />
+              </div>
+            </div>
+            <div class="composer-param">
+              <span class="composer-label" data-i18n="label.length">Length</span>
+              <div class="composer-param-control">
+                <input type="range" id="el-length-slider" class="composer-slider" min="0.2" max="12" step="0.05" value="10" />
+                <input type="number" id="el-length-num" class="composer-num" min="0.2" max="12" step="0.05" value="10.00" />
+              </div>
+            </div>
+            <div class="composer-param">
+              <span class="composer-label" data-i18n="label.width">Width</span>
+              <div class="composer-param-control">
+                <input type="range" id="el-width-slider" class="composer-slider" min="0.03" max="8" step="0.05" value="5.75" />
+                <input type="number" id="el-width-num" class="composer-num" min="0.03" max="8" step="0.05" value="5.75" />
+              </div>
+            </div>
+            <div class="composer-param">
+              <span class="composer-label" data-i18n="label.pitch">Pitch</span>
+              <div class="composer-param-control">
+                <input type="range" id="el-pitch-slider" class="composer-slider" min="5" max="50" step="0.1" value="30.2" />
+                <input type="number" id="el-pitch-num" class="composer-num" min="5" max="50" step="0.1" value="30.21" />
+              </div>
+            </div>
+            <input type="file" id="element-svg-file" accept=".svg,image/svg+xml" hidden />
+            <button type="button" id="element-import" class="composer-action" data-i18n="action.importElementSvg">Import element .svg</button>
+            <p id="element-import-name" class="composer-import-hint hidden" aria-live="polite"></p>
+          </section>
+
+          <section class="composer-section composer-section-block">
+            <h2 class="composer-section-title" data-i18n="section.randomness">Randomness</h2>
+            <div class="composer-param">
+              <span class="composer-label" data-i18n="label.sensitivity">Sensitivity</span>
+              <div class="composer-param-control">
+                <input type="range" id="rand-sensitivity-slider" class="composer-slider" min="0" max="8" step="0.1" value="3.6" />
+                <input type="number" id="rand-sensitivity-num" class="composer-num" min="0" max="8" step="0.1" value="3.60" />
+              </div>
+            </div>
+            <button type="button" id="re-random" class="composer-action" data-i18n="action.reRandom">Re-Random</button>
+          </section>
+
+          <section class="composer-section">
+            <h2 class="composer-section-title" data-i18n="section.sensor">Sensor</h2>
+            <label class="composer-field">
+              <span class="composer-label" data-i18n="label.sensorType">Sensor Type</span>
+              <select id="sensor-type" class="composer-select">
+                <option value="mouse" selected data-i18n="sensor.mouse">mouse / 滑鼠</option>
+              </select>
+            </label>
+          </section>
+
+          <section class="composer-section" id="section-mouse">
+            <h2 class="composer-section-title" data-i18n="section.mouse">Mouse</h2>
+            <label class="composer-field composer-field-check">
+              <input type="checkbox" id="mouse-follow-direction" class="composer-check" checked />
+              <span class="composer-label" data-i18n="label.mouseFollowDirection">Follow direction</span>
+            </label>
+            <div class="composer-param">
+              <span class="composer-label" data-i18n="label.mouseDirectionInfluence">Direction influence</span>
+              <div class="composer-param-control">
+                <input type="range" id="mouse-direction-slider" class="composer-slider" min="0" max="1" step="0.05" value="0.85" />
+                <input type="number" id="mouse-direction-num" class="composer-num" min="0" max="1" step="0.05" value="0.85" />
+              </div>
+            </div>
+            <label class="composer-field">
+              <span class="composer-label" data-i18n="label.length">Length</span>
+              <input type="number" id="mouse-length" class="composer-input" min="0" max="20" step="0.01" value="10.00" />
+            </label>
+            <label class="composer-field">
+              <span class="composer-label" data-i18n="label.width">Width</span>
+              <input type="number" id="mouse-width" class="composer-input" min="0" max="20" step="0.01" value="0.00" />
+            </label>
+          </section>
+
+          <button type="button" id="reset" class="composer-reset"><span data-i18n="action.reset">Reset</span> <span aria-hidden="true">›</span></button>
+        </div>
+
+        <footer class="composer-footer">
+          <button type="button" id="timeline-editor" class="composer-footer-btn" title="Timeline Editor">
+            <span class="composer-timeline-icon" aria-hidden="true">+</span>
+            <span class="composer-footer-label" data-i18n="footer.timelineEditor">Timeline Editor</span>
+          </button>
+          <button type="button" id="lang-toggle" class="composer-lang" aria-pressed="true" title="Bilingual">EN/中</button>
+        </footer>
+      </aside>
+
+      <main class="composer-stage">
+        <div class="composer-canvas-wrap">
+          <div id="canvas-host"></div>
+          <div id="empty-state" class="composer-canvas-empty hidden" data-i18n="empty.loading">Loading…</div>
+        </div>
+      </main>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
