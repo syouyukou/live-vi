@@ -18,7 +18,7 @@ npm run dev
 | 全域 `~/.cursor/skills/ui-ux-pro-max` | UI 檢查清單（配色以 `design-system/MASTER.md` 為準） |
 | 全域 `~/.agents/skills/` | 同上 Vercel skills |
 
-見 [AGENTS.md](AGENTS.md)、[docs/ROADMAP.md](docs/ROADMAP.md)。
+見 [AGENTS.md](AGENTS.md)、[CHANGELOG.md](CHANGELOG.md)（版本紀錄）、[docs/ROADMAP.md](docs/ROADMAP.md)、[docs/VERSIONING.md](docs/VERSIONING.md)（如何發版）。
 
 ## 已實作
 

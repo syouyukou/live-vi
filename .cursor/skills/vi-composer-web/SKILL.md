@@ -48,6 +48,7 @@ description: >-
 2. Register in `param-registry.js` (group, min/max/step, labels)
 3. Use in `renderer.js` / modifiers if it affects visuals
 4. Sidebar auto-builds from registry — no duplicate HTML
+5. Note the change under `[Unreleased]` in `CHANGELOG.md` (see `docs/VERSIONING.md` on release)
 
 ## Performance
 

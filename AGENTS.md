@@ -17,5 +17,7 @@ npm run build
 
 ## Docs
 
+- [CHANGELOG.md](CHANGELOG.md) — record every release under `[Unreleased]` then cut `## [x.y.z]`
+- [docs/VERSIONING.md](docs/VERSIONING.md) — bump `package.json`, tag `v*`, push
 - [docs/ROADMAP.md](docs/ROADMAP.md) — phases
 - [design-system/MASTER.md](design-system/MASTER.md) — colors/layout
