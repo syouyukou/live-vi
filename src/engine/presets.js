@@ -7,7 +7,7 @@ export const SVG_PRESETS = [
       <path fill="none" stroke="#000" d="M 40 260 C 120 220, 200 180, 300 140 S 420 80, 500 60"/>
       <path fill="none" stroke="#000" d="M 0 200 C 60 180, 120 150, 200 110 S 360 30, 440 0"/>
     </svg>`,
-    unit: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 10"><polygon points="2,5 46,1 46,9" fill="#111"/></svg>`,
+    unit: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 54"><path fill="#111" d="M 10 0 C 15 20 16.5 28 10 30 C 16.8 32 16 44 10 54 C 3.2 44 2.2 32 10 30 C 3.5 28 5 20 10 0 Z"/></svg>`,
   },
   {
     name: "波浪帶",

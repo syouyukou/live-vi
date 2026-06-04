@@ -3,12 +3,19 @@ import { deformPolyline } from "./deform.js";
 import { samplePlacements } from "./sampler.js";
 import { instanceAngle, instanceScales, lerpAngle } from "./instance-modifiers.js";
 import { getMaterialColor } from "./color-modes.js";
-import { ensureGradientStops, sampleGradientMap } from "./gradient-map.js";
+import {
+  applyGradientVertexColors,
+  clearGradientVertexColors,
+  ensureGradientStops,
+} from "./gradient-map.js";
 import { parseUnitSvg } from "./unit.js";
+import { buildMergedOutlineGeometry } from "./overlap-outline.js";
+import { expandPlacementsWithCopies } from "./placement-copy.js";
 
 export class ViRenderer {
   /** @param {HTMLElement} host */
   constructor(host) {
+    if (!host) throw new Error("ViRenderer requires a canvas host element");
     this.host = host;
     this.params = null;
     /** @type {import("./path.js").PathGroup[]} */
@@ -39,7 +46,13 @@ export class ViRenderer {
     this.scene.add(this.contentGroup);
     /** @type {THREE.InstancedMesh[]} */
     this.instanceLayers = [];
+    /** @type {THREE.Mesh | null} */
+    this.mergedOutlineMesh = null;
     this.dummy = new THREE.Object3D();
+  }
+
+  usesMergedOverlap() {
+    return this.params?.elementOverlapMode === "merged";
   }
 
   setParams(params) {
@@ -55,6 +68,7 @@ export class ViRenderer {
   setUnit(unit) {
     if (this.unitShape?.geometry) this.unitShape.geometry.dispose();
     this.unitShape = unit;
+    this.syncUnitGradientGeometry();
     this.structureDirty = true;
   }
 
@@ -96,11 +110,26 @@ export class ViRenderer {
       const poly = deformPolyline(group, this.time, p);
       all.push(...samplePlacements(poly, spacing, phase));
     }
-    return all;
+    return expandPlacementsWithCopies(all, p);
   }
 
   usesFillGradient() {
     return Boolean(this.params?.elementUseGradient);
+  }
+
+  skipsOutlineLayer() {
+    return Boolean(this.unitShape?.useSvgColors && !this.unitShape?.outlineColor);
+  }
+
+  /** Index of main fill InstancedMesh in instanceLayers. */
+  mainFillLayerIndex() {
+    if (this.skipsOutlineLayer() || this.usesMergedOverlap()) return 0;
+    return 1;
+  }
+
+  /** @returns {THREE.InstancedMesh | null} */
+  getMainFillMesh() {
+    return this.instanceLayers[this.mainFillLayerIndex()] ?? null;
   }
 
   /** @param {import("./sampler.js").Placement} placement @param {number} instanceIndex */
@@ -111,15 +140,27 @@ export class ViRenderer {
       return new THREE.Color(unit.fillColor ?? "#111111");
     }
     if (p.elementUseGradient) {
-      const stops = ensureGradientStops(
-        p.elementGradientStops,
-        p.fillColor,
-        p.gradientColorEnd,
-      );
-      return sampleGradientMap(placement?.t ?? 0, stops);
+      return new THREE.Color(p.fillColor ?? "#ffffff");
     }
     if (p.fillColor) return new THREE.Color(p.fillColor);
     return getMaterialColor(p.colorModeIndex, p.strokeColor, instanceIndex, p.seed);
+  }
+
+  syncUnitGradientGeometry() {
+    const geom = this.unitShape?.geometry;
+    if (!geom || !this.params) return;
+    if (this.params.elementUseGradient) {
+      applyGradientVertexColors(
+        geom,
+        ensureGradientStops(
+          this.params.elementGradientStops,
+          this.params.fillColor,
+          this.params.gradientColorEnd,
+        ),
+      );
+    } else {
+      clearGradientVertexColors(geom);
+    }
   }
 
   /** @param {import("./sampler.js").Placement} placement @param {number} instanceIndex */
@@ -130,12 +171,19 @@ export class ViRenderer {
       const hex = unit.outlineColor ?? unit.fillColor ?? "#111111";
       return new THREE.Color(hex);
     }
-    return new THREE.Color(p.outlineColor ?? "#ffd700");
+    return new THREE.Color(p.outlineColor ?? "#5eb0ff");
   }
 
-  createMaterial(opacity, depthWrite, instanceIndex, outline = false, unitShape = null, useInstanceColor = false) {
+  createMaterial(
+    opacity,
+    depthWrite,
+    instanceIndex,
+    outline = false,
+    unitShape = null,
+    useVertexGradient = false,
+  ) {
     let color = 0xffffff;
-    if (!useInstanceColor) {
+    if (!useVertexGradient) {
       const placement = { t: 0, index: instanceIndex };
       color = outline
         ? this.resolveOutlineColor(placement, instanceIndex, unitShape)
@@ -143,21 +191,12 @@ export class ViRenderer {
     }
     return new THREE.MeshBasicMaterial({
       color,
+      vertexColors: useVertexGradient,
       transparent: opacity < 1,
       opacity,
       depthWrite,
       side: THREE.DoubleSide,
     });
-  }
-
-  /** @param {THREE.InstancedMesh} mesh @param {import("./sampler.js").Placement[]} placements */
-  applyFillInstanceColors(mesh, placements, unitShape = null) {
-    const attr = new THREE.InstancedBufferAttribute(new Float32Array(mesh.count * 3), 3);
-    for (let i = 0; i < placements.length; i++) {
-      this.resolveFillColor(placements[i], i, unitShape).toArray(attr.array, i * 3);
-    }
-    mesh.instanceColor = attr;
-    mesh.instanceColor.needsUpdate = true;
   }
 
   clearLayers() {
@@ -167,6 +206,53 @@ export class ViRenderer {
       mesh.material.dispose();
     }
     this.instanceLayers = [];
+    this.disposeMergedOutline();
+  }
+
+  disposeMergedOutline() {
+    if (!this.mergedOutlineMesh) return;
+    this.contentGroup.remove(this.mergedOutlineMesh);
+    this.mergedOutlineMesh.geometry.dispose();
+    this.mergedOutlineMesh.material.dispose();
+    this.mergedOutlineMesh = null;
+  }
+
+  /** @param {import("./sampler.js").Placement[]} placements */
+  updateMergedOutline(placements) {
+    if (!this.usesMergedOverlap() || this.skipsOutlineLayer() || !this.unitShape) {
+      this.disposeMergedOutline();
+      return;
+    }
+
+    const geom = buildMergedOutlineGeometry(
+      placements,
+      this.unitShape.geometry,
+      this.params,
+      this.mouse,
+    );
+    if (!geom) {
+      this.disposeMergedOutline();
+      return;
+    }
+
+    const color = this.resolveOutlineColor({ t: 0, index: 0 }, 0);
+    if (!this.mergedOutlineMesh) {
+      this.mergedOutlineMesh = new THREE.Mesh(
+        geom,
+        new THREE.MeshBasicMaterial({
+          color,
+          transparent: false,
+          depthWrite: true,
+          side: THREE.DoubleSide,
+        }),
+      );
+      this.mergedOutlineMesh.renderOrder = 0;
+      this.contentGroup.add(this.mergedOutlineMesh);
+    } else {
+      this.mergedOutlineMesh.geometry.dispose();
+      this.mergedOutlineMesh.geometry = geom;
+      this.mergedOutlineMesh.material.color.copy(color);
+    }
   }
 
   applyPlacementsToMesh(mesh, placements, unitShape, opacity, phaseOffset, scaleMul = 1) {
@@ -177,10 +263,15 @@ export class ViRenderer {
       const { scaleX, scaleY } = instanceScales(pt, p, this.mouse);
       const lineBoost = 1 + (p.elementLineWidth - 1) * 0.08;
       const rotZ = instanceAngle(pt.angle, pt, p, this.mouse);
+      const copyMul = pt.copyScaleMul ?? 1;
 
       this.dummy.position.set(pt.x, pt.y, pt.z);
       this.dummy.rotation.set(0, 0, rotZ);
-      this.dummy.scale.set(scaleX * lineBoost * scaleMul, scaleY * lineBoost * scaleMul, 1);
+      this.dummy.scale.set(
+        scaleX * lineBoost * scaleMul * copyMul,
+        scaleY * lineBoost * scaleMul * copyMul,
+        1,
+      );
       this.dummy.updateMatrix();
       mesh.setMatrixAt(i, this.dummy.matrix);
     }
@@ -191,6 +282,7 @@ export class ViRenderer {
     this.clearLayers();
     if (!this.isReady()) return;
 
+    this.syncUnitGradientGeometry();
     const p = this.params;
     const placementsA = this.collectPlacements(0);
     const totalA = placementsA.length;
@@ -198,8 +290,9 @@ export class ViRenderer {
 
     const outlineBoost = p.outlineScale ?? 1.06;
     const skipOutline = this.unitShape.useSvgColors && !this.unitShape.outlineColor;
+    const mergedOverlap = this.usesMergedOverlap();
     const fillGradient = this.usesFillGradient();
-    if (!skipOutline) {
+    if (!skipOutline && !mergedOverlap) {
       const outlineA = new THREE.InstancedMesh(
         this.unitShape.geometry,
         this.createMaterial(1, true, 0, true, this.unitShape, false),
@@ -220,7 +313,10 @@ export class ViRenderer {
     this.contentGroup.add(mainA);
     this.instanceLayers.push(mainA);
     this.applyPlacementsToMesh(mainA, placementsA, this.unitShape, 1, 0);
-    if (fillGradient) this.applyFillInstanceColors(mainA, placementsA, this.unitShape);
+
+    if (mergedOverlap && !skipOutline) {
+      this.updateMergedOutline(placementsA);
+    }
 
     if (p.enableSecondLayer && this.unitShapeB) {
       const placementsB = this.collectPlacements(p.secondLayerPhase);
@@ -264,13 +360,18 @@ export class ViRenderer {
     else {
       const placementsA = this.collectPlacements(0);
       const outlineBoost = p.outlineScale ?? 1.06;
-      if (this.instanceLayers[0]) {
+      const mainIdx = this.mainFillLayerIndex();
+      if (!this.skipsOutlineLayer() && !this.usesMergedOverlap() && this.instanceLayers[0]) {
         this.applyPlacementsToMesh(this.instanceLayers[0], placementsA, this.unitShape, 1, 0, outlineBoost);
       }
-      if (this.instanceLayers[1]) {
-        this.applyPlacementsToMesh(this.instanceLayers[1], placementsA, this.unitShape, 1, 0);
+      const mainMesh = this.instanceLayers[mainIdx];
+      if (mainMesh) {
+        this.applyPlacementsToMesh(mainMesh, placementsA, this.unitShape, 1, 0);
       }
-      let idx = 2;
+      if (this.usesMergedOverlap()) {
+        this.updateMergedOutline(placementsA);
+      }
+      let idx = mainIdx + 1;
       if (p.enableSecondLayer && this.unitShapeB && this.instanceLayers[idx]) {
         const placementsB = this.collectPlacements(p.secondLayerPhase);
         this.applyPlacementsToMesh(this.instanceLayers[idx], placementsB, this.unitShapeB, p.secondLayerOpacity, p.secondLayerPhase);
@@ -285,6 +386,24 @@ export class ViRenderer {
 
   updateColors() {
     this.scene.background = new THREE.Color(this.params.bgColor);
+    if (!this.isReady()) return;
+    this.syncUnitGradientGeometry();
+    const mesh = this.getMainFillMesh();
+    if (this.usesFillGradient() && mesh?.material?.vertexColors) {
+      const colorAttr = mesh.geometry.attributes.color;
+      if (colorAttr) colorAttr.needsUpdate = true;
+      if (this.mergedOutlineMesh?.material) {
+        this.mergedOutlineMesh.material.color.copy(
+          this.resolveOutlineColor({ t: 0, index: 0 }, 0),
+        );
+      }
+      return;
+    }
+    if (this.mergedOutlineMesh?.material) {
+      this.mergedOutlineMesh.material.color.copy(
+        this.resolveOutlineColor({ t: 0, index: 0 }, 0),
+      );
+    }
     this.markStructureDirty();
   }
 

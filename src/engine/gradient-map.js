@@ -14,7 +14,7 @@ export function newGradientStopId() {
 /** @returns {GradientStop[]} */
 export function defaultGradientStops() {
   return [
-    { id: newGradientStopId(), position: 0, color: "#ff3388", midpoint: 0.5 },
+    { id: newGradientStopId(), position: 0, color: "#39c837", midpoint: 0.5 },
     { id: newGradientStopId(), position: 0.5, color: "#111111", midpoint: 0.5 },
     { id: newGradientStopId(), position: 1, color: "#3366ff", midpoint: 0.5 },
   ];
@@ -27,7 +27,7 @@ export function defaultGradientStops() {
  */
 export function gradientStopsFromLegacy(start, end) {
   return [
-    { id: newGradientStopId(), position: 0, color: normalizeHexColor(start) ?? "#ff3388", midpoint: 0.5 },
+    { id: newGradientStopId(), position: 0, color: normalizeHexColor(start) ?? "#39c837", midpoint: 0.5 },
     { id: newGradientStopId(), position: 1, color: normalizeHexColor(end) ?? "#3366ff", midpoint: 0.5 },
   ];
 }
@@ -40,7 +40,7 @@ export function gradientStopsFromLegacy(start, end) {
  */
 export function ensureGradientStops(stops, fillColor, gradientColorEnd) {
   if (Array.isArray(stops) && stops.length >= 2) return normalizeGradientStops(stops);
-  return gradientStopsFromLegacy(fillColor ?? "#ff3388", gradientColorEnd ?? "#3366ff");
+  return gradientStopsFromLegacy(fillColor ?? "#39c837", gradientColorEnd ?? "#3366ff");
 }
 
 /**
@@ -131,4 +131,48 @@ export function syncLegacyFillFromStops(stops) {
     fillColor: list[0].color,
     gradientColorEnd: list[list.length - 1].color,
   };
+}
+
+/** @param {THREE.BufferGeometry} geometry */
+export function clearGradientVertexColors(geometry) {
+  if (geometry.attributes.color) geometry.deleteAttribute("color");
+}
+
+/**
+ * Bake gradient into unit geometry so each instance shows the full map locally.
+ * @param {THREE.BufferGeometry} geometry
+ * @param {GradientStop[]} stops
+ */
+export function applyGradientVertexColors(geometry, stops) {
+  const list = normalizeGradientStops(stops);
+  geometry.computeBoundingBox();
+  const box = geometry.boundingBox;
+  if (!box) return;
+
+  const sizeX = box.max.x - box.min.x;
+  const sizeY = box.max.y - box.min.y;
+  const alongY = sizeY >= sizeX;
+  const min = alongY ? box.min.y : box.min.x;
+  const span = (alongY ? sizeY : sizeX) || 1;
+
+  const positions = geometry.attributes.position;
+  if (!positions) return;
+
+  const colors = new Float32Array(positions.count * 3);
+  for (let i = 0; i < positions.count; i++) {
+    const coord = alongY ? positions.getY(i) : positions.getX(i);
+    const t = (coord - min) / span;
+    const c = sampleGradientMap(t, list);
+    colors[i * 3] = c.r;
+    colors[i * 3 + 1] = c.g;
+    colors[i * 3 + 2] = c.b;
+  }
+
+  const attr = geometry.attributes.color;
+  if (attr) {
+    attr.array.set(colors);
+    attr.needsUpdate = true;
+  } else {
+    geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+  }
 }

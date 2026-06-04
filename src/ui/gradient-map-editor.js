@@ -97,8 +97,10 @@ export function initGradientMapEditor(mount, accessors, onChange) {
   }
 
   function positionFromEvent(clientX) {
+    if (!track) return 0.5;
     const rect = track.getBoundingClientRect();
-    return Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+    const w = rect.width || 1;
+    return Math.max(0, Math.min(1, (clientX - rect.left) / w));
   }
 
   function pickStop(id) {

@@ -50,12 +50,20 @@ export function bindSliderPair(baseId, spec, onChange) {
 export function bindColorPair(baseId, spec, onChange) {
   const color = document.getElementById(`${baseId}-color`);
   const hex = document.getElementById(`${baseId}-hex`);
+  const preview = document.getElementById(`${baseId}-preview`);
+  const swatchBtn = document.getElementById(`${baseId}-swatch`);
   if (!color || !hex) return;
+
+  const syncPreview = (h) => {
+    preview?.style.setProperty("--swatch-color", h);
+    swatchBtn?.style.setProperty("--swatch-color", h);
+  };
 
   const syncFromParams = () => {
     const v = spec.get();
     color.value = v;
     hex.value = v;
+    syncPreview(v);
   };
 
   const apply = (raw) => {
@@ -66,9 +74,11 @@ export function bindColorPair(baseId, spec, onChange) {
     spec.set(h);
     color.value = h;
     hex.value = h;
+    syncPreview(h);
     onChange?.();
   };
 
+  swatchBtn?.addEventListener("click", () => color.click());
   color.addEventListener("input", (e) => apply(e.target.value));
   hex.addEventListener("change", (e) => apply(e.target.value));
   hex.addEventListener("input", (e) => apply(e.target.value));

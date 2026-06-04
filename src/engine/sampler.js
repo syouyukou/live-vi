@@ -1,4 +1,4 @@
-/** @typedef {{ x: number, y: number, z: number, angle: number, t: number, index: number }} Placement */
+/** @typedef {{ x: number, y: number, z: number, angle: number, t: number, index: number, copyScaleMul?: number }} Placement */
 
 /**
  * @param {{ x: number, y: number, z: number }[]} polyline
@@ -23,6 +23,7 @@ export function samplePlacements(polyline, spacing, phase01 = 0) {
   /** @type {Placement[]} */
   const placements = [];
   let globalIndex = 0;
+  let distBeforeSeg = 0;
 
   for (let i = 0; i < polyline.length - 1; i++) {
     const a = polyline[i];
@@ -35,16 +36,18 @@ export function samplePlacements(polyline, spacing, phase01 = 0) {
     let d = carry;
     while (d < len) {
       const u = d / len;
+      const along = distBeforeSeg + d;
       placements.push({
         x: a.x + dx * u,
         y: a.y + dy * u,
         z: a.z + (b.z - a.z) * u,
         angle: Math.atan2(dy, dx),
-        t: (carry + d) / Math.max(totalLen, 1),
+        t: along / Math.max(totalLen, 1),
         index: globalIndex++,
       });
       d += spacing;
     }
+    distBeforeSeg += len;
     carry = d - len;
   }
 

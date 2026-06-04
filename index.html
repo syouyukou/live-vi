@@ -122,6 +122,58 @@
                 <input type="number" id="el-pitch-num" class="composer-num" min="5" max="50" step="0.1" value="30.21" />
               </div>
             </div>
+            <div class="composer-param">
+              <span class="composer-label" data-i18n="label.overlap">Overlap</span>
+              <div class="composer-preset-row" role="group" aria-label="Overlap mode">
+                <button type="button" class="composer-preset-btn is-active" data-el-overlap="separate" data-i18n="overlap.separate">Separate</button>
+                <button type="button" class="composer-preset-btn" data-el-overlap="merged" data-i18n="overlap.merged">Merged</button>
+              </div>
+            </div>
+            <div class="composer-param composer-param-stack">
+              <span class="composer-label" data-i18n="label.copy">Copy</span>
+              <div id="el-copy-panel" class="composer-copy-panel">
+                <label class="composer-copy-check">
+                  <input type="checkbox" id="el-copy-enabled" class="composer-check" />
+                  <span data-i18n="label.copyEnable">Copy</span>
+                </label>
+                <div id="el-copy-fields" class="composer-copy-fields is-disabled">
+                  <div class="composer-copy-field">
+                    <span class="composer-copy-label" data-i18n="label.copyHorizontal">Horizontal</span>
+                    <input type="number" id="el-copy-offset-x" class="composer-copy-input" value="0" step="1" />
+                    <span class="composer-copy-unit">px</span>
+                  </div>
+                  <div class="composer-copy-field">
+                    <span class="composer-copy-label" data-i18n="label.copyVertical">Vertical</span>
+                    <input type="number" id="el-copy-offset-y" class="composer-copy-input" value="0" step="1" />
+                    <span class="composer-copy-unit">px</span>
+                  </div>
+                  <div class="composer-copy-field">
+                    <span class="composer-copy-label" data-i18n="label.copyDistance">Distance</span>
+                    <input type="number" id="el-copy-distance" class="composer-copy-input" value="0" min="0" step="1" />
+                    <span class="composer-copy-unit">px</span>
+                  </div>
+                  <div class="composer-copy-field">
+                    <span class="composer-copy-label" data-i18n="label.copyAngle">Angle</span>
+                    <input type="number" id="el-copy-offset-angle" class="composer-copy-input" value="0" step="1" />
+                    <span class="composer-copy-unit">°</span>
+                  </div>
+                  <div class="composer-copy-field">
+                    <span class="composer-copy-label" data-i18n="label.copyRotate">Rotation</span>
+                    <input type="number" id="el-copy-rotate" class="composer-copy-input" value="0" step="1" />
+                    <span class="composer-copy-unit">°</span>
+                  </div>
+                  <div class="composer-copy-field">
+                    <span class="composer-copy-label" data-i18n="label.copyScale">Scale</span>
+                    <input type="number" id="el-copy-scale" class="composer-copy-input" value="100" min="10" max="200" step="1" />
+                    <span class="composer-copy-unit">%</span>
+                  </div>
+                  <div class="composer-copy-field">
+                    <span class="composer-copy-label" data-i18n="label.copyCount">Copies</span>
+                    <input type="number" id="el-copy-count" class="composer-copy-input" value="1" min="1" max="24" step="1" />
+                  </div>
+                </div>
+              </div>
+            </div>
             <div class="composer-color-block">
               <p class="composer-sub-label" data-i18n="section.elementColor">Color</p>
               <label class="composer-field composer-field-check composer-color-gradient-toggle">
@@ -133,15 +185,56 @@
                 <div id="el-gradient-map-root"></div>
                 <p class="gradient-map-hint" data-i18n="hint.gradientMap">Drag stops · diamonds adjust blend · double-click bar to add · double-click stop to remove</p>
               </div>
+              <div class="composer-ai-color-stack" aria-hidden="false">
+                <div class="composer-ai-color-icons">
+                  <button
+                    type="button"
+                    id="el-outline-swatch"
+                    class="composer-ai-icon composer-ai-icon--stroke"
+                    aria-label="Outline color"
+                    title="Outline"
+                  >
+                    <span class="composer-ai-icon-shape" id="el-outline-preview"></span>
+                  </button>
+                  <button
+                    type="button"
+                    id="el-fill-swatch"
+                    class="composer-ai-icon composer-ai-icon--fill"
+                    aria-label="Fill color"
+                    title="Fill"
+                  >
+                    <span class="composer-ai-icon-shape" id="el-fill-preview"></span>
+                  </button>
+                </div>
+                <button
+                  type="button"
+                  id="el-color-swap"
+                  class="composer-ai-color-swap"
+                  data-i18n-title="action.swapFillStroke"
+                  aria-label="Swap fill and outline"
+                  title="Swap fill and outline"
+                >
+                  <svg class="composer-ai-color-swap-icon" viewBox="0 0 16 10" width="16" height="10" aria-hidden="true">
+                    <path
+                      d="M2 5c2.5-2.8 5-4 8-4M14 5c-2.5 2.8-5 4-8 4"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.2"
+                      stroke-linecap="round"
+                    />
+                    <path d="M1 5h2M13 5h2" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" />
+                  </svg>
+                </button>
+                <input type="color" id="el-fill-color" class="composer-color-input-hidden" value="#39c837" tabindex="-1" />
+                <input type="color" id="el-outline-color" class="composer-color-input-hidden" value="#5eb0ff" tabindex="-1" />
+              </div>
               <div class="composer-color-row" id="el-fill-row">
                 <span class="composer-label" data-i18n="label.fillColor">Fill</span>
-                <input type="color" id="el-fill-color" class="composer-color-swatch" value="#ff3388" aria-label="Fill color" />
-                <input type="text" id="el-fill-hex" class="composer-color-hex" value="#ff3388" maxlength="7" spellcheck="false" />
+                <input type="text" id="el-fill-hex" class="composer-color-hex" value="#39c837" maxlength="7" spellcheck="false" />
               </div>
               <div class="composer-color-row">
                 <span class="composer-label" data-i18n="label.outlineColor">Outline</span>
-                <input type="color" id="el-outline-color" class="composer-color-swatch" value="#ffd700" aria-label="Outline color" />
-                <input type="text" id="el-outline-hex" class="composer-color-hex" value="#ffd700" maxlength="7" spellcheck="false" />
+                <input type="text" id="el-outline-hex" class="composer-color-hex" value="#5eb0ff" maxlength="7" spellcheck="false" />
               </div>
             </div>
             <input type="file" id="element-svg-file" accept=".svg,image/svg+xml" hidden />
@@ -167,6 +260,7 @@
               <span class="composer-label" data-i18n="label.sensorType">Sensor Type</span>
               <select id="sensor-type" class="composer-select">
                 <option value="mouse" selected data-i18n="sensor.mouse">mouse / 滑鼠</option>
+                <option value="none" data-i18n="sensor.none">none / 無反應</option>
               </select>
             </label>
           </section>

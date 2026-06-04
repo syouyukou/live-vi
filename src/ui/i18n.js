@@ -34,21 +34,35 @@ export const UI_STRINGS = {
   "label.width": { en: "Width", zh: "寬度" },
   "label.height": { en: "Height", zh: "高度" },
   "label.pitch": { en: "Pitch", zh: "間距" },
+  "label.overlap": { en: "Overlap", zh: "交疊" },
+  "overlap.separate": { en: "Separate", zh: "各自框線" },
+  "overlap.merged": { en: "Merged", zh: "融合" },
+  "label.copy": { en: "Copy", zh: "複製" },
+  "label.copyEnable": { en: "Copy", zh: "複製" },
+  "label.copyHorizontal": { en: "Horizontal", zh: "水平" },
+  "label.copyVertical": { en: "Vertical", zh: "垂直" },
+  "label.copyDistance": { en: "Distance", zh: "距離" },
+  "label.copyAngle": { en: "Angle", zh: "角度" },
+  "label.copyRotate": { en: "Rotation", zh: "旋轉" },
+  "label.copyScale": { en: "Scale", zh: "縮放" },
+  "label.copyCount": { en: "Copies", zh: "副本數量" },
   "section.elementColor": { en: "Color", zh: "顏色" },
   "label.useGradient": { en: "Gradient", zh: "漸層" },
   "label.gradientMap": { en: "Gradient map", zh: "漸層對應" },
   "hint.gradientMap": {
-    en: "Drag stops · diamonds adjust blend · double-click bar to add · double-click stop to remove",
-    zh: "拖曳色標 · 菱形調過渡 · 雙擊列新增 · 雙擊色標刪除",
+    en: "Gradient on each element (along its shape) · drag stops · diamonds adjust blend · double-click bar to add",
+    zh: "漸層作用於每個物件本體 · 拖曳色標 · 菱形調過渡 · 雙擊列新增",
   },
   "label.fillColor": { en: "Fill", zh: "填色" },
   "label.outlineColor": { en: "Outline", zh: "外框" },
+  "action.swapFillStroke": { en: "Swap fill and outline", zh: "交換填色與外框" },
   "section.randomness": { en: "Randomness", zh: "隨機" },
   "label.sensitivity": { en: "Sensitivity", zh: "敏感度" },
   "action.reRandom": { en: "Re-Random", zh: "重新隨機" },
   "section.sensor": { en: "Sensor", zh: "感應器" },
   "label.sensorType": { en: "Sensor Type", zh: "感應器類型" },
   "sensor.mouse": { en: "mouse", zh: "滑鼠" },
+  "sensor.none": { en: "none", zh: "無反應" },
   "section.mouse": { en: "Mouse", zh: "滑鼠" },
   "label.mouseFollowDirection": { en: "Follow direction", zh: "跟隨方向" },
   "label.mouseDirectionInfluence": { en: "Direction influence", zh: "方向強度" },
@@ -77,6 +91,15 @@ export function applyUiLang(lang) {
     const entry = key && UI_STRINGS[key];
     if (!entry) return;
     el.textContent = formatLabel(entry, lang);
+  });
+
+  document.querySelectorAll("[data-i18n-title]").forEach((el) => {
+    const key = el.getAttribute("data-i18n-title");
+    const entry = key && UI_STRINGS[key];
+    if (!entry) return;
+    const label = formatLabel(entry, lang);
+    el.setAttribute("title", label);
+    if (el.hasAttribute("aria-label")) el.setAttribute("aria-label", label);
   });
 
   const toggle = document.getElementById("lang-toggle");

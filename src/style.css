@@ -12,8 +12,8 @@
   --accent: #c53030;
   --input-bg: #d4d4d4;
   --canvas-paper: #ffffff;
-  --fill-pink: #ff3388;
-  --stroke-gold: #ffd700;
+  --fill-green: #39c837;
+  --stroke-blue: #5eb0ff;
 }
 
 *,
@@ -195,6 +195,74 @@ body.composer-sidebar-resizing * {
   background: color-mix(in oklab, var(--input-bg) 80%, var(--text-muted));
 }
 
+/* —— Element copy (dark panel, ref. Move/Copy) —— */
+.composer-copy-panel {
+  margin-top: 4px;
+  padding: 10px 10px 8px;
+  border-radius: 6px;
+  background: #2e2e2e;
+  color: #f0f0f0;
+}
+
+.composer-copy-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.composer-copy-check .composer-check {
+  accent-color: #6eb6ff;
+}
+
+.composer-copy-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.composer-copy-fields.is-disabled {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.composer-copy-field {
+  display: grid;
+  grid-template-columns: 4.5em 1fr 1.6em;
+  align-items: center;
+  gap: 6px;
+}
+
+.composer-copy-label {
+  font-size: 11px;
+  color: #c8c8c8;
+}
+
+.composer-copy-input {
+  width: 100%;
+  padding: 4px 6px;
+  font: inherit;
+  font-size: 11px;
+  color: #f0f0f0;
+  background: #1a1a1a;
+  border: 1px solid #444;
+  border-radius: 4px;
+}
+
+.composer-copy-input:focus-visible {
+  outline: 2px solid #6eb6ff;
+  outline-offset: 1px;
+  border-color: #6eb6ff;
+}
+
+.composer-copy-unit {
+  font-size: 10px;
+  color: #999;
+  text-align: left;
+}
+
 .composer-preset-btn:focus-visible,
 .composer-reset:focus-visible,
 .composer-select:focus-visible,
@@ -313,6 +381,112 @@ body.composer-sidebar-resizing * {
   margin-bottom: 6px;
 }
 
+/* Illustrator-style fill / stroke swatches */
+.composer-ai-color-stack {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding: 4px 2px 2px;
+}
+
+.composer-ai-color-icons {
+  position: relative;
+  width: 34px;
+  height: 28px;
+  flex-shrink: 0;
+}
+
+.composer-ai-icon {
+  --swatch-color: #888;
+  position: absolute;
+  margin: 0;
+  padding: 0;
+  width: 22px;
+  height: 22px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 1px;
+}
+
+.composer-ai-icon:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.composer-ai-icon--stroke {
+  top: 0;
+  left: 0;
+  z-index: 2;
+}
+
+.composer-ai-icon--fill {
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+}
+
+.composer-ai-icon-shape {
+  display: block;
+  box-sizing: border-box;
+}
+
+.composer-ai-icon--fill .composer-ai-icon-shape {
+  width: 18px;
+  height: 18px;
+  margin: 2px 0 0 2px;
+  background: var(--swatch-color);
+  border: 1px solid color-mix(in oklab, var(--text) 22%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--canvas-paper) 85%, transparent);
+}
+
+.composer-ai-icon--stroke .composer-ai-icon-shape {
+  width: 18px;
+  height: 18px;
+  margin: 1px 0 0 1px;
+  background: var(--canvas-paper);
+  border: 3px solid var(--swatch-color);
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--text) 12%, transparent);
+}
+
+.composer-ai-color-swap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  margin: 0 0 1px;
+  padding: 0;
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  border-radius: 1px;
+  cursor: pointer;
+}
+
+.composer-ai-color-swap:hover {
+  color: var(--text);
+  background: color-mix(in oklab, var(--input-bg) 70%, transparent);
+}
+
+.composer-ai-color-swap:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.composer-ai-color-swap-icon {
+  display: block;
+}
+
+.composer-color-input-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
 .composer-color-row {
   display: flex;
   align-items: center;
@@ -325,26 +499,6 @@ body.composer-sidebar-resizing * {
   flex-shrink: 0;
   font-size: 10px;
   line-height: 1.25;
-}
-
-.composer-color-swatch {
-  flex-shrink: 0;
-  width: 28px;
-  height: 22px;
-  padding: 0;
-  border: 1px solid color-mix(in oklab, var(--border) 80%, transparent);
-  border-radius: 1px;
-  background: var(--input-bg);
-  cursor: pointer;
-}
-
-.composer-color-swatch::-webkit-color-swatch-wrapper {
-  padding: 2px;
-}
-
-.composer-color-swatch::-webkit-color-swatch {
-  border: none;
-  border-radius: 0;
 }
 
 .composer-color-hex {
@@ -361,7 +515,6 @@ body.composer-sidebar-resizing * {
   border-radius: 1px;
 }
 
-.composer-color-swatch:focus-visible,
 .composer-color-hex:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
@@ -398,18 +551,19 @@ body.composer-sidebar-resizing * {
 .gradient-map-midpoints,
 .gradient-map-stops {
   position: absolute;
-  left: 2px;
-  right: 2px;
-  height: 0;
+  left: 0;
+  right: 0;
+  top: 12px;
+  height: 24px;
   pointer-events: none;
 }
 
 .gradient-map-midpoints {
-  top: 2px;
+  z-index: 2;
 }
 
 .gradient-map-stops {
-  bottom: 2px;
+  z-index: 3;
 }
 
 .gradient-map-mid,
@@ -430,7 +584,7 @@ body.composer-sidebar-resizing * {
 }
 
 .gradient-map-mid {
-  top: 0;
+  top: 2px;
   width: 10px;
   height: 10px;
   background: color-mix(in oklab, var(--text-muted) 70%, var(--input-bg));
@@ -446,7 +600,7 @@ body.composer-sidebar-resizing * {
 }
 
 .gradient-map-stop {
-  bottom: 0;
+  bottom: 2px;
   width: 16px;
   height: 14px;
   display: flex;

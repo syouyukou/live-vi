@@ -107,6 +107,17 @@ export function initDesignPanel(params, hooks) {
     ),
   ].filter(Boolean);
 
+  document.getElementById("el-color-swap")?.addEventListener("click", () => {
+    const fill = params.fillColor;
+    params.fillColor = params.outlineColor;
+    params.outlineColor = fill;
+    if (!params.elementUseGradient && params.elementGradientStops?.[0]) {
+      params.elementGradientStops[0].color = params.fillColor;
+    }
+    for (const b of colorBindings) b?.syncFromParams();
+    hooks.onColorChange?.();
+  });
+
   const bindings = [
     bindSliderPair("shape-size", {
       get: () => params.cameraZoomValue,
@@ -215,6 +226,74 @@ export function initDesignPanel(params, hooks) {
     hooks.onStructureChange();
   });
 
+  const overlapBtns = document.querySelectorAll("[data-el-overlap]");
+  const syncOverlapUi = () => {
+    for (const btn of overlapBtns) {
+      const mode = btn.getAttribute("data-el-overlap");
+      btn.classList.toggle("is-active", mode === params.elementOverlapMode);
+    }
+  };
+  for (const btn of overlapBtns) {
+    btn.addEventListener("click", () => {
+      const mode = btn.getAttribute("data-el-overlap");
+      if (mode !== "separate" && mode !== "merged") return;
+      params.elementOverlapMode = mode;
+      syncOverlapUi();
+      hooks.onStructureChange();
+    });
+  }
+
+  const copyEnabled = document.getElementById("el-copy-enabled");
+  const copyFields = document.getElementById("el-copy-fields");
+  const copyInputs = {
+    count: document.getElementById("el-copy-count"),
+    offsetX: document.getElementById("el-copy-offset-x"),
+    offsetY: document.getElementById("el-copy-offset-y"),
+    distance: document.getElementById("el-copy-distance"),
+    offsetAngle: document.getElementById("el-copy-offset-angle"),
+    rotate: document.getElementById("el-copy-rotate"),
+    scale: document.getElementById("el-copy-scale"),
+  };
+
+  const syncCopyUi = () => {
+    if (copyEnabled) copyEnabled.checked = params.elementCopyEnabled;
+    copyFields?.classList.toggle("is-disabled", !params.elementCopyEnabled);
+    if (copyInputs.count) copyInputs.count.value = String(params.elementCopyCount);
+    if (copyInputs.offsetX) copyInputs.offsetX.value = String(params.elementCopyOffsetX);
+    if (copyInputs.offsetY) copyInputs.offsetY.value = String(params.elementCopyOffsetY);
+    if (copyInputs.distance) copyInputs.distance.value = String(params.elementCopyDistance);
+    if (copyInputs.offsetAngle) copyInputs.offsetAngle.value = String(params.elementCopyOffsetAngle);
+    if (copyInputs.rotate) copyInputs.rotate.value = String(params.elementCopyRotateStep);
+    if (copyInputs.scale) copyInputs.scale.value = String(params.elementCopyScaleStep);
+  };
+
+  const applyCopyFromInputs = () => {
+    if (copyInputs.count) {
+      params.elementCopyCount = Math.min(24, Math.max(1, Math.floor(Number(copyInputs.count.value) || 1)));
+    }
+    if (copyInputs.offsetX) params.elementCopyOffsetX = Number(copyInputs.offsetX.value) || 0;
+    if (copyInputs.offsetY) params.elementCopyOffsetY = Number(copyInputs.offsetY.value) || 0;
+    if (copyInputs.distance) params.elementCopyDistance = Math.max(0, Number(copyInputs.distance.value) || 0);
+    if (copyInputs.offsetAngle) params.elementCopyOffsetAngle = Number(copyInputs.offsetAngle.value) || 0;
+    if (copyInputs.rotate) params.elementCopyRotateStep = Number(copyInputs.rotate.value) || 0;
+    if (copyInputs.scale) {
+      params.elementCopyScaleStep = Math.min(200, Math.max(10, Number(copyInputs.scale.value) || 100));
+    }
+    syncCopyUi();
+    hooks.onStructureChange();
+  };
+
+  copyEnabled?.addEventListener("change", (e) => {
+    params.elementCopyEnabled = e.target.checked;
+    syncCopyUi();
+    hooks.onStructureChange();
+  });
+
+  for (const input of Object.values(copyInputs)) {
+    input?.addEventListener("change", applyCopyFromInputs);
+    input?.addEventListener("input", applyCopyFromInputs);
+  }
+
   return {
     syncFromParams() {
       params.elementGradientStops = ensureGradientStops(
@@ -222,10 +301,12 @@ export function initDesignPanel(params, hooks) {
         params.fillColor,
         params.gradientColorEnd,
       );
-      shapeSelect.value = String(params.svgPresetIndex);
+      if (shapeSelect) shapeSelect.value = String(params.svgPresetIndex);
       for (const b of bindings) b?.syncFromParams();
       for (const b of colorBindings) b?.syncFromParams();
       syncGradientUi();
+      syncOverlapUi();
+      syncCopyUi();
       gradientEditor.syncFromParams();
     },
   };

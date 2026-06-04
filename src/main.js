@@ -13,8 +13,15 @@ import { initSidebarResize } from "./ui/sidebar-resize.js";
 import { createUnitAssetLibrary } from "./lib/asset-library-idb.js";
 import { initElementImportPopover } from "./ui/element-import-popover.js";
 
+const canvasHost = document.getElementById("canvas-host");
+if (!canvasHost) {
+  document.body.innerHTML =
+    "<p style=\"padding:2rem;font-family:system-ui,sans-serif\">無法啟動：找不到畫布容器。請在 <code>live-vi</code> 資料夾執行 <code>npm run dev</code>，不要直接雙擊開啟 HTML 檔案。</p>";
+  throw new Error("Missing #canvas-host — run via Vite dev server (npm run dev)");
+}
+
 const params = defaultParams();
-const vi = new ViRenderer(document.getElementById("canvas-host"));
+const vi = new ViRenderer(canvasHost);
 vi.setParams(params);
 
 params.handEnabled = false;
@@ -30,8 +37,29 @@ const appFlow = createAppFlow();
 
 const defaults = () => structuredClone(defaultParams());
 
+/** @type {const} */
+const SENSOR_TYPES = ["mouse", "none"];
+
+/** @param {number} index */
+function applySensorType(index) {
+  const idx = Math.max(0, Math.min(SENSOR_TYPES.length - 1, index));
+  params.sensorTypeIndex = idx;
+  params.mouseEnabled = idx === 0;
+  document.getElementById("section-mouse")?.classList.toggle("hidden", idx !== 0);
+  if (idx !== 0) vi.mouse.active = false;
+  vi.markStructureDirty();
+}
+
+function syncSensorUi() {
+  const idx = params.sensorTypeIndex ?? 0;
+  params.mouseEnabled = idx === 0;
+  const sensorSelect = document.getElementById("sensor-type");
+  if (sensorSelect) sensorSelect.value = SENSOR_TYPES[idx] ?? "mouse";
+  document.getElementById("section-mouse")?.classList.toggle("hidden", idx !== 0);
+}
+
 function updateReadyUi() {
-  emptyState.classList.toggle("hidden", vi.isReady());
+  emptyState?.classList.toggle("hidden", vi.isReady());
 }
 
 function applyPresetIndex(index) {
@@ -123,28 +151,35 @@ const settingPanel = initSettingPanel(params, {
   onCanvasChange: () => vi.resize(),
 });
 
-const mouseDirectionControl = bindSliderPair("mouse-direction", {
-  get: () => params.mouseDirectionInfluence,
-  set: (n) => {
-    params.mouseDirectionInfluence = n;
+const mouseDirectionControl = bindSliderPair(
+  "mouse-direction",
+  {
+    get: () => params.mouseDirectionInfluence,
+    set: (n) => {
+      params.mouseDirectionInfluence = n;
+    },
   },
-  onChange: () => vi.markStructureDirty(),
-});
+  () => vi.markStructureDirty(),
+);
 
 function syncUiFromParams() {
   designPanel.syncFromParams();
   settingPanel.syncFromParams();
-  document.getElementById("mouse-follow-direction").checked = params.mouseFollowDirection;
+  syncSensorUi();
+  const mouseFollow = document.getElementById("mouse-follow-direction");
+  if (mouseFollow) mouseFollow.checked = params.mouseFollowDirection;
   mouseDirectionControl?.syncFromParams();
-  document.getElementById("mouse-length").value = params.scalingByMouseSensitivityLength.toFixed(2);
-  document.getElementById("mouse-width").value = params.scalingByMouseSensitivityWidth.toFixed(2);
+  const mouseLen = document.getElementById("mouse-length");
+  const mouseWid = document.getElementById("mouse-width");
+  if (mouseLen) mouseLen.value = params.scalingByMouseSensitivityLength.toFixed(2);
+  if (mouseWid) mouseWid.value = params.scalingByMouseSensitivityWidth.toFixed(2);
 }
 
 function resetAll() {
   const fresh = defaults();
   Object.assign(params, fresh);
   params.handEnabled = false;
-  params.mouseEnabled = true;
+  applySensorType(fresh.sensorTypeIndex ?? 0);
   document.getElementById("element-import-name")?.classList.add("hidden");
   params.hasCustomUnit = false;
   syncUiFromParams();
@@ -176,24 +211,29 @@ panelSelect?.addEventListener("change", () => {
   showPanel(panelSelect.value);
 });
 
+document.getElementById("sensor-type")?.addEventListener("change", (e) => {
+  const index = SENSOR_TYPES.indexOf(/** @type {string} */ (e.target.value));
+  if (index >= 0) applySensorType(index);
+});
+
 document.getElementById("mouse-follow-direction")?.addEventListener("change", (e) => {
   params.mouseFollowDirection = e.target.checked;
   vi.markStructureDirty();
 });
 
-document.getElementById("mouse-length").addEventListener("input", (e) => {
+document.getElementById("mouse-length")?.addEventListener("input", (e) => {
   params.scalingByMouseSensitivityLength = Number(e.target.value);
   vi.markStructureDirty();
 });
 
-document.getElementById("mouse-width").addEventListener("input", (e) => {
+document.getElementById("mouse-width")?.addEventListener("input", (e) => {
   params.scalingByMouseSensitivityWidth = Number(e.target.value);
   vi.markStructureDirty();
 });
 
-document.getElementById("reset").addEventListener("click", resetAll);
+document.getElementById("reset")?.addEventListener("click", resetAll);
 
-document.getElementById("timeline-editor").addEventListener("click", () => {
+document.getElementById("timeline-editor")?.addEventListener("click", () => {
   window.alert("Timeline Editor is locked in Ver. 0.1.3.");
 });
 

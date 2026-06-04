@@ -10,6 +10,7 @@ export const PARAM_GROUPS = [
       { key: "baseScaleWidth", labelEn: "Element / Width", labelJa: "エレメント / 幅", min: 0.2, max: 6, step: 0.05 },
       { key: "pitch", labelEn: "Element / Pitch", labelJa: "エレメント / ピッチ", min: 0.01, max: 0.12, step: 0.002 },
       { key: "elementLineWidth", labelEn: "Element / Line Width", labelJa: "エレメント / 輪郭の太さ", min: 0.5, max: 4, step: 0.1 },
+      { key: "elementOverlapMode", labelEn: "Element / Overlap", labelJa: "エレメント / 重なり", min: 0, max: 1, step: 1 },
     ],
   },
   {
