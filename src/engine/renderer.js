@@ -99,18 +99,35 @@ export class ViRenderer {
   }
 
   isReady() {
-    return this.pathGroups.length > 0 && this.unitShape !== null;
+    if (!this.unitShape) return false;
+    if (this.params?.pathInstanceLimit === 1) return true;
+    return this.pathGroups.length > 0;
   }
 
   collectPlacements(phase = 0) {
     const p = this.params;
+    const limit = p.pathInstanceLimit;
+    if (limit === 1) {
+      const single = this.buildSinglePreviewPlacement();
+      return expandPlacementsWithCopies([single], p).slice(0, 1);
+    }
+
     const spacing = Math.max(4, this.unitShape.unitLength * p.pitch * 80);
     const all = [];
     for (const group of this.pathGroups) {
       const poly = deformPolyline(group, this.time, p);
       all.push(...samplePlacements(poly, spacing, phase));
     }
-    return expandPlacementsWithCopies(all, p);
+    const expanded = expandPlacementsWithCopies(all, p);
+    if (limit != null && limit > 0 && expanded.length > limit) {
+      return expanded.slice(0, limit);
+    }
+    return expanded;
+  }
+
+  /** 初始預覽：單位圖形已置中，實例放在世界原點 */
+  buildSinglePreviewPlacement() {
+    return { x: 0, y: 0, z: 0, angle: 0, t: 0.5, index: 0 };
   }
 
   usesFillGradient() {
@@ -503,13 +520,14 @@ export class ViRenderer {
     const paths = placements
       .map((pt, idx) => {
         const { scaleX, scaleY } = instanceScales({ ...pt, index: idx }, p, this.mouse);
+        const copyMul = pt.copyScaleMul ?? 1;
         const rot = instanceAngle(pt.angle, pt, p, this.mouse);
         const cos = Math.cos(rot);
         const sin = Math.sin(rot);
         const pts = [];
         for (let i = 0; i < pos.length; i += 3) {
-          const ux = pos[i] * scaleX;
-          const uy = pos[i + 1] * scaleY;
+          const ux = pos[i] * scaleX * copyMul;
+          const uy = pos[i + 1] * scaleY * copyMul;
           const x = pt.x + ux * cos - uy * sin;
           const y = -(pt.y + ux * sin + uy * cos);
           pts.push(`${pts.length ? "L" : "M"} ${x.toFixed(2)} ${y.toFixed(2)}`);

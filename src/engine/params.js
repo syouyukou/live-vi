@@ -12,6 +12,8 @@ export function defaultParams() {
     baseScaleLength: 10,
     baseScaleWidth: 5.75,
     pitch: 0.03021,
+    /** 沿路徑實例上限；null 表示不限制（調整 Pitch 後會解除） */
+    pathInstanceLimit: 1,
     elementLineWidth: 1.5,
     /** @type {"separate" | "merged"} */
     elementOverlapMode: "separate",

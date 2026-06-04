@@ -171,6 +171,7 @@
                     <span class="composer-copy-label" data-i18n="label.copyCount">Copies</span>
                     <input type="number" id="el-copy-count" class="composer-copy-input" value="1" min="1" max="24" step="1" />
                   </div>
+                  <button type="button" id="el-copy-reset" class="composer-copy-reset" data-i18n="action.reset">Reset / 重設</button>
                 </div>
               </div>
             </div>
@@ -185,36 +186,24 @@
                 <div id="el-gradient-map-root"></div>
                 <p class="gradient-map-hint" data-i18n="hint.gradientMap">Drag stops · diamonds adjust blend · double-click bar to add · double-click stop to remove</p>
               </div>
-              <div class="composer-ai-color-stack" aria-hidden="false">
-                <div class="composer-ai-color-icons">
-                  <button
-                    type="button"
-                    id="el-outline-swatch"
-                    class="composer-ai-icon composer-ai-icon--stroke"
-                    aria-label="Outline color"
-                    title="Outline"
-                  >
-                    <span class="composer-ai-icon-shape" id="el-outline-preview"></span>
-                  </button>
-                  <button
-                    type="button"
-                    id="el-fill-swatch"
-                    class="composer-ai-icon composer-ai-icon--fill"
-                    aria-label="Fill color"
-                    title="Fill"
-                  >
-                    <span class="composer-ai-icon-shape" id="el-fill-preview"></span>
-                  </button>
+              <div class="composer-color-rows">
+                <div class="composer-color-row" id="el-fill-row">
+                  <span class="composer-label" data-i18n="label.fillColor">Fill</span>
+                  <input type="color" id="el-fill-color" class="composer-color-pick" value="#87CEEB" />
+                </div>
+                <div class="composer-color-row">
+                  <span class="composer-label" data-i18n="label.outlineColor">Outline</span>
+                  <input type="color" id="el-outline-color" class="composer-color-pick" value="#5eb0ff" />
                 </div>
                 <button
                   type="button"
                   id="el-color-swap"
-                  class="composer-ai-color-swap"
+                  class="composer-color-swap"
                   data-i18n-title="action.swapFillStroke"
                   aria-label="Swap fill and outline"
                   title="Swap fill and outline"
                 >
-                  <svg class="composer-ai-color-swap-icon" viewBox="0 0 16 10" width="16" height="10" aria-hidden="true">
+                  <svg class="composer-color-swap-icon" viewBox="0 0 16 10" width="16" height="10" aria-hidden="true">
                     <path
                       d="M2 5c2.5-2.8 5-4 8-4M14 5c-2.5 2.8-5 4-8 4"
                       fill="none"
@@ -224,17 +213,8 @@
                     />
                     <path d="M1 5h2M13 5h2" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" />
                   </svg>
+                  <span data-i18n="action.swapFillStroke">Swap fill and outline</span>
                 </button>
-                <input type="color" id="el-fill-color" class="composer-color-input-hidden" value="#39c837" tabindex="-1" />
-                <input type="color" id="el-outline-color" class="composer-color-input-hidden" value="#5eb0ff" tabindex="-1" />
-              </div>
-              <div class="composer-color-row" id="el-fill-row">
-                <span class="composer-label" data-i18n="label.fillColor">Fill</span>
-                <input type="text" id="el-fill-hex" class="composer-color-hex" value="#39c837" maxlength="7" spellcheck="false" />
-              </div>
-              <div class="composer-color-row">
-                <span class="composer-label" data-i18n="label.outlineColor">Outline</span>
-                <input type="text" id="el-outline-hex" class="composer-color-hex" value="#5eb0ff" maxlength="7" spellcheck="false" />
               </div>
             </div>
             <input type="file" id="element-svg-file" accept=".svg,image/svg+xml" hidden />

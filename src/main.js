@@ -74,6 +74,22 @@ function applyPresetIndex(index) {
   vi.markStructureDirty();
 }
 
+/** 啟動／重設：只顯示置中的單位元素，不沿路徑排列 */
+function loadInitialView() {
+  const index = Math.max(0, Math.min(SVG_PRESETS.length - 1, params.svgPresetIndex ?? 0));
+  params.svgPresetIndex = index;
+  const preset = SVG_PRESETS[index];
+  if (!preset) return;
+  const unit = parseUnitSvg(preset.unit);
+  if (!unit) return;
+  vi.setUnit(unit);
+  vi.setPaths([]);
+  params.pathInstanceLimit = 1;
+  params.hasCustomUnit = false;
+  updateReadyUi();
+  vi.markStructureDirty();
+}
+
 let uiLang = /** @type {import("./ui/i18n.js").UiLang} */ ("both");
 const unitAssetLibrary = createUnitAssetLibrary();
 
@@ -183,11 +199,18 @@ function resetAll() {
   document.getElementById("element-import-name")?.classList.add("hidden");
   params.hasCustomUnit = false;
   syncUiFromParams();
-  applyPresetIndex(params.svgPresetIndex);
+  loadInitialView();
   seedMouseCenter();
 }
 
 function seedMouseCenter() {
+  if (params.pathInstanceLimit === 1) {
+    vi.mouse.active = false;
+    vi.mouse.world.set(0, 0, 0);
+    vi.mouse.target.set(0, 0, 0);
+    vi.mouse.directionValid = false;
+    return;
+  }
   const b = vi.getCameraBounds?.();
   if (!b) return;
   const x = b.left + (b.right - b.left) * 0.28;
@@ -285,7 +308,7 @@ if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
 }
 
 showPanel(panelSelect?.value ?? "design");
-applyPresetIndex(0);
+loadInitialView();
 syncUiFromParams();
 vi.resize();
 vi.render();

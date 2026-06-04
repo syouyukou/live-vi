@@ -167,6 +167,28 @@ assert(
 const expanded = expandPlacementsWithCopies(basePlacements, copyParams);
 assert("copy expands instances", expanded.length === basePlacements.length * 3);
 assert("copy offsets x", Math.abs(expanded[1].x - (expanded[0].x + 5)) < 0.01);
+const scaleParams = defaultParams();
+scaleParams.elementCopyEnabled = true;
+scaleParams.elementCopyCount = 1;
+scaleParams.elementCopyScaleStep = 50;
+const scaled = expandPlacementsWithCopies(basePlacements.slice(0, 1), scaleParams);
+assert(
+  "copy scale step on copy instance",
+  scaled.length === 2 && Math.abs((scaled[1].copyScaleMul ?? 1) - 0.5) < 0.01,
+);
+
+console.log("\n=== Config round-trip (copy & overlap) ===");
+const copyCfg = defaultParams();
+copyCfg.elementCopyEnabled = true;
+copyCfg.elementCopyCount = 2;
+copyCfg.elementOverlapMode = "merged";
+copyCfg.sensorTypeIndex = 1;
+const jsonCopy = exportConfig(copyCfg, timeline, appFlow);
+const copyCfg2 = defaultParams();
+importConfig(jsonCopy, copyCfg2, timeline, appFlow);
+assert("copy params round-trip", copyCfg2.elementCopyEnabled && copyCfg2.elementCopyCount === 2);
+assert("overlap mode round-trip", copyCfg2.elementOverlapMode === "merged");
+assert("sensor none round-trip", copyCfg2.sensorTypeIndex === 1);
 
 console.log("\n=== Color & modifiers ===");
 assert("normalizeHexColor accepts 6-digit", normalizeHexColor("aabbcc") === "#aabbcc");

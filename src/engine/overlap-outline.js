@@ -13,11 +13,12 @@ const MAX_CANVAS = 768;
 function placementBounds(pt, unitGeom, params, mouse, scaleMul) {
   const { scaleX, scaleY } = instanceScales(pt, params, mouse);
   const lineBoost = 1 + (params.elementLineWidth - 1) * 0.08;
+  const copyMul = pt.copyScaleMul ?? 1;
   const rotZ = instanceAngle(pt.angle, pt, params, mouse);
   const cos = Math.cos(rotZ);
   const sin = Math.sin(rotZ);
-  const sx = scaleX * lineBoost * scaleMul;
-  const sy = scaleY * lineBoost * scaleMul;
+  const sx = scaleX * lineBoost * scaleMul * copyMul;
+  const sy = scaleY * lineBoost * scaleMul * copyMul;
   const pos = unitGeom.attributes.position.array;
   let minX = Infinity;
   let minY = Infinity;
@@ -162,11 +163,12 @@ export function buildMergedOutlineGeometry(placements, unitGeom, params, mouse) 
   for (const pt of placements) {
     const { scaleX, scaleY } = instanceScales(pt, params, mouse);
     const lineBoost = 1 + (params.elementLineWidth - 1) * 0.08;
+    const copyMul = pt.copyScaleMul ?? 1;
     const rotZ = instanceAngle(pt.angle, pt, params, mouse);
     const cos = Math.cos(rotZ);
     const sin = Math.sin(rotZ);
-    const sx = scaleX * lineBoost;
-    const sy = scaleY * lineBoost;
+    const sx = scaleX * lineBoost * copyMul;
+    const sy = scaleY * lineBoost * copyMul;
     const pos = unitGeom.attributes.position.array;
     const index = unitGeom.index;
 

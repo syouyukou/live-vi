@@ -43,27 +43,16 @@ export function bindSliderPair(baseId, spec, onChange) {
 }
 
 /**
- * @param {string} baseId e.g. "el-fill" → #el-fill-color, #el-fill-hex
+ * @param {string} baseId e.g. "el-fill" → #el-fill-color
  * @param {{ get: () => string, set: (hex: string) => void }} spec
  * @param {() => void} [onChange]
  */
 export function bindColorPair(baseId, spec, onChange) {
   const color = document.getElementById(`${baseId}-color`);
-  const hex = document.getElementById(`${baseId}-hex`);
-  const preview = document.getElementById(`${baseId}-preview`);
-  const swatchBtn = document.getElementById(`${baseId}-swatch`);
-  if (!color || !hex) return;
-
-  const syncPreview = (h) => {
-    preview?.style.setProperty("--swatch-color", h);
-    swatchBtn?.style.setProperty("--swatch-color", h);
-  };
+  if (!color) return;
 
   const syncFromParams = () => {
-    const v = spec.get();
-    color.value = v;
-    hex.value = v;
-    syncPreview(v);
+    color.value = spec.get();
   };
 
   const apply = (raw) => {
@@ -73,15 +62,10 @@ export function bindColorPair(baseId, spec, onChange) {
     h = h.toLowerCase();
     spec.set(h);
     color.value = h;
-    hex.value = h;
-    syncPreview(h);
     onChange?.();
   };
 
-  swatchBtn?.addEventListener("click", () => color.click());
   color.addEventListener("input", (e) => apply(e.target.value));
-  hex.addEventListener("change", (e) => apply(e.target.value));
-  hex.addEventListener("input", (e) => apply(e.target.value));
 
   return { syncFromParams };
 }

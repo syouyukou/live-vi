@@ -1,3 +1,4 @@
+import { defaultParams } from "../engine/params.js";
 import { SVG_PRESETS } from "../engine/presets.js";
 import { ensureGradientStops, syncLegacyFillFromStops } from "../engine/gradient-map.js";
 import { bindColorPair, bindSliderPair } from "./bind-controls.js";
@@ -203,6 +204,7 @@ export function initDesignPanel(params, hooks) {
         get: () => params.pitch,
         set: (n) => {
           params.pitch = n;
+          params.pathInstanceLimit = null;
         },
         toDisplay: (n) => n * 1000,
         fromDisplay: (d) => d / 1000,
@@ -293,6 +295,19 @@ export function initDesignPanel(params, hooks) {
     input?.addEventListener("change", applyCopyFromInputs);
     input?.addEventListener("input", applyCopyFromInputs);
   }
+
+  document.getElementById("el-copy-reset")?.addEventListener("click", () => {
+    const d = defaultParams();
+    params.elementCopyCount = d.elementCopyCount;
+    params.elementCopyOffsetX = d.elementCopyOffsetX;
+    params.elementCopyOffsetY = d.elementCopyOffsetY;
+    params.elementCopyDistance = d.elementCopyDistance;
+    params.elementCopyOffsetAngle = d.elementCopyOffsetAngle;
+    params.elementCopyRotateStep = d.elementCopyRotateStep;
+    params.elementCopyScaleStep = d.elementCopyScaleStep;
+    syncCopyUi();
+    hooks.onStructureChange();
+  });
 
   return {
     syncFromParams() {
