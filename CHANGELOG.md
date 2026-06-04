@@ -1,8 +1,10 @@
 # Changelog
 
-本專案所有重要變更都記錄於此。格式參考 [Keep a Changelog](https://keepachangelog.com/zh-TW/1.1.0/)，版本號遵循 [語意化版本](https://semver.org/lang/zh-TW/)。
+本專案所有重要變更都記錄於此，**自 0.1.0 起**依版本累積。格式參考 [Keep a Changelog](https://keepachangelog.com/zh-TW/1.1.0/)，版本號遵循 [語意化版本](https://semver.org/lang/zh-TW/)。
 
 維護方式見 [docs/VERSIONING.md](docs/VERSIONING.md)。
+
+> **Git 標籤說明：** `v0.1.0`、`v0.2.0` 為依開發歷程回溯整理，無獨立提交；`v0.2.1` 起與 GitHub 提交對應。
 
 ## [Unreleased]
 
@@ -27,7 +29,7 @@
 - `instanceAngle()` / `lerpAngle()`：路徑切線角度與滑鼠方向平滑混合
 - 渲染迴圈追蹤滑鼠位移方向；SVG 匯出同步套用旋轉
 - `.gitignore`（排除 `node_modules`、`dist` 等）
-- 本檔 `CHANGELOG.md` 與版本維護說明
+- 本檔 `CHANGELOG.md` 與 [docs/VERSIONING.md](docs/VERSIONING.md)
 
 ### Changed
 
@@ -39,15 +41,14 @@
 
 ---
 
-## [0.2.0] — 2026-06（基線版）
+## [0.2.0] — 2026-06
 
-首個可在瀏覽器運行的 **LIVE VI Composer** Web 版，對齊 [Autumn Meteorite VI Composer](https://composer.autumnmeteorite.jp/) 的**視覺**功能（不含陀螺儀、音訊、麥克風、文字層）。
+首個功能完整的 **LIVE VI Composer** Web 版，對齊 [Autumn Meteorite VI Composer](https://composer.autumnmeteorite.jp/) 的**視覺**能力（不含陀螺儀、音訊、麥克風、文字層）。
 
 ### Added
 
 **核心渲染**
 
-- Vite 6 + Three.js：`InstancedMesh` 沿路徑排列 SVG 元素
 - 路徑變形（`shapeModify`、`shapeRotate`）、取樣間距（Pitch）
 - 元素角度 / 長度 / 寬度 / 線寬、相機縮放
 - 隨機種子與感度（長 / 寬分軸、`sharedScaleDirection`）
@@ -89,11 +90,34 @@
 
 ---
 
+## [0.1.0] — 2026-06（專案起步）
+
+**流動的 creative code / live-vi** 專案建立，目標為在瀏覽器重現 VI Composer 的圖像管線。
+
+### Added
+
+- Vite 6 + Three.js 專案骨架（`package.json`、`src/main.js` 渲染迴圈）
+- 正交相機 + `InstancedMesh` 沿路徑放置單一符號圖層
+- `parsePathSvg` / `parseUnitSvg`、`samplePlacements` 基礎取樣
+- `defaultParams()` 與 `param-registry.js` 參數結構雛形
+- `ViRenderer`：路徑 → 變形 → 實例矩陣更新（無第二層 / echo）
+- 最小畫布容器 `#canvas-host`（尚未對齊原站三欄 + 時間軸 footer）
+
+### Not yet（留待 0.2.0）
+
+- 完整 Design / Setting 側欄、雙語 UI
+- 滑鼠 / 手勢感應、隨機感度面板
+- Timeline、App Flow、Config / Timeline JSON、PNG·SVG·WebM 匯出
+- `design-system/MASTER.md`、ROADMAP、Agent skills
+
+---
+
 ## 版本對照
 
-| 版本   | 日期       | 摘要 |
-|--------|------------|------|
-| 0.2.1  | 2026-06-04 | 滑鼠方向跟隨、CHANGELOG、GitHub |
-| 0.2.0  | 2026-06    | 首版 Web VI Composer 基線功能 |
+| 版本  | 日期       | Git tag   | 摘要 |
+|-------|------------|-----------|------|
+| 0.2.1 | 2026-06-04 | `v0.2.1`  | 滑鼠方向跟隨、CHANGELOG、GitHub |
+| 0.2.0 | 2026-06    | —（回溯） | 完整 Web VI Composer 基線 |
+| 0.1.0 | 2026-06    | —（回溯） | Vite + Three 渲染雛形、路徑/符號管線起步 |
 
-更早的桌面 / 原站功能不在本 repo 版本史內；請參考 Autumn Meteorite 官方 Composer。
+Autumn Meteorite 官方桌面 / 原站 Composer 的功能不在本 repo 版本史內。
