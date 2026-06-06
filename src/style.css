@@ -330,6 +330,43 @@ body.composer-sidebar-resizing * {
   outline-offset: 1px;
 }
 
+/* —— Element B (second slot) —— */
+.composer-element-b-panel {
+  margin-top: 4px;
+  padding: 10px 10px 8px;
+  border-radius: 6px;
+  background: #f4f4f4;
+  border: 1px solid var(--border);
+}
+
+.composer-element-b-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.composer-element-b-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.composer-element-b-fields.is-disabled {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.composer-element-b-fields .composer-param {
+  margin: 0;
+}
+
+.composer-element-b-colors {
+  margin-top: 2px;
+}
+
 .composer-preset-btn:focus-visible,
 .composer-element-preset-btn:focus-visible,
 .composer-reset:focus-visible,

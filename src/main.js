@@ -116,6 +116,30 @@ function applyElementPreset(elementPresetIndex) {
   syncUiFromParams();
 }
 
+/**
+ * @param {number} elementBPresetIndex
+ */
+function applyElementBPreset(elementBPresetIndex) {
+  const entry = elementPresets[elementBPresetIndex];
+  if (!entry) return;
+  const unit = parseUnitSvg(entry.preset.unit, { outlineScale: params.outlineScale });
+  if (!unit) return;
+
+  params.elementBPresetIndex = elementBPresetIndex;
+  params.elementBHasCustomUnit = false;
+  vi.setUnitB(unit);
+  updateReadyUi();
+  vi.markStructureDirty();
+  syncUiFromParams();
+}
+
+function ensureElementBLoaded() {
+  if (!params.elementBEnabled) return;
+  if (vi.unitShapeB) return;
+  const index = params.elementBPresetIndex ?? 3;
+  applyElementBPreset(Math.max(0, Math.min(elementPresets.length - 1, index)));
+}
+
 /** 啟動／重設：只顯示置中的單位元素，不沿路徑排列 */
 function loadInitialView() {
   params.hasCustomUnit = false;
@@ -192,6 +216,14 @@ const designPanel = initDesignPanel(params, {
   hasActivePath: () => vi.pathGroups.length > 0,
   onPresetChange: applyPresetIndex,
   onElementPresetChange: applyElementPreset,
+  onElementBPresetChange: applyElementBPreset,
+  onElementBEnabledChange: (enabled) => {
+    if (enabled) ensureElementBLoaded();
+    else {
+      vi.setUnitB(null);
+      vi.markStructureDirty();
+    }
+  },
   onPathSvg: (text) => {
     params.pathInstanceLimit = null;
     vi.setPaths(parsePathSvg(text));
@@ -214,6 +246,8 @@ const settingPanel = initSettingPanel(params, {
   onConfigImported: () => {
     syncUiFromParams();
     applyPresetIndex(params.svgPresetIndex);
+    if (params.elementBEnabled) ensureElementBLoaded();
+    else vi.setUnitB(null);
     seedMouseCenter();
     vi.markStructureDirty();
   },
@@ -251,6 +285,7 @@ function resetAll() {
   applySensorType(fresh.sensorTypeIndex ?? 0);
   document.getElementById("element-import-name")?.classList.add("hidden");
   params.hasCustomUnit = false;
+  vi.setUnitB(null);
   syncUiFromParams();
   loadInitialView();
   seedMouseCenter();
@@ -326,6 +361,7 @@ initUiLang(document.getElementById("lang-toggle"), (lang) => {
   elementImportPopover.refreshI18n();
   designPanel.refreshShapePresetLabels(lang);
   designPanel.refreshElementPresetLabels(lang);
+  designPanel.refreshElementBPresetLabels(lang);
 });
 
 initSidebarResize(document.querySelector(".composer-sidebar-resize"));

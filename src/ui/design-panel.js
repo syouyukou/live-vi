@@ -42,6 +42,7 @@ export function initDesignPanel(params, hooks) {
   }
 
   const elementPresetGrid = document.getElementById("element-preset-grid");
+  const elementBPresetGrid = document.getElementById("element-b-preset-grid");
   const elementPresets = getElementPresets();
 
   /** @param {import("./i18n.js").UiLang} lang */
@@ -70,6 +71,32 @@ export function initDesignPanel(params, hooks) {
     }
   };
 
+  /** @param {import("./i18n.js").UiLang} lang */
+  const renderElementBPresetGrid = (lang = "both") => {
+    if (!elementBPresetGrid) return;
+    elementBPresetGrid.innerHTML = elementPresets
+      .map(({ preset }, i) => {
+        const labelEntry = preset.elementLabel ?? preset.label ?? { en: preset.name, zh: preset.name };
+        const label = formatLabel(labelEntry, lang);
+        const thumb = preset.unit.replace(/fill="#111"/gi, 'fill="currentColor"');
+        const active = params.elementBPresetIndex === i ? " is-active" : "";
+        return `<button type="button" class="composer-element-preset-btn${active}" data-element-b-preset="${i}" role="option" aria-selected="${params.elementBPresetIndex === i}" title="${label}" aria-label="${label}">
+          <span class="composer-element-preset-thumb" aria-hidden="true">${thumb}</span>
+        </button>`;
+      })
+      .join("");
+  };
+
+  const syncElementBPresetUi = () => {
+    if (!elementBPresetGrid) return;
+    for (const btn of elementBPresetGrid.querySelectorAll("[data-element-b-preset]")) {
+      const index = Number(btn.getAttribute("data-element-b-preset"));
+      const active = params.elementBPresetIndex === index;
+      btn.classList.toggle("is-active", active);
+      btn.setAttribute("aria-selected", String(active));
+    }
+  };
+
   if (elementPresetGrid) {
     renderElementPresetGrid("both");
     elementPresetGrid.addEventListener("click", (e) => {
@@ -78,6 +105,97 @@ export function initDesignPanel(params, hooks) {
       hooks.onElementPresetChange(Number(btn.getAttribute("data-element-preset")));
     });
   }
+
+  if (elementBPresetGrid) {
+    renderElementBPresetGrid("both");
+    elementBPresetGrid.addEventListener("click", (e) => {
+      const btn = /** @type {HTMLElement | null} */ (e.target)?.closest("[data-element-b-preset]");
+      if (!btn) return;
+      hooks.onElementBPresetChange(Number(btn.getAttribute("data-element-b-preset")));
+    });
+  }
+
+  const elementBEnabled = document.getElementById("el-b-enabled");
+  const elementBFields = document.getElementById("el-b-fields");
+
+  const syncElementBUi = () => {
+    if (elementBEnabled) elementBEnabled.checked = params.elementBEnabled;
+    elementBFields?.classList.toggle("is-disabled", !params.elementBEnabled);
+    syncElementBPresetUi();
+  };
+
+  elementBEnabled?.addEventListener("change", (e) => {
+    params.elementBEnabled = e.target.checked;
+    syncElementBUi();
+    hooks.onElementBEnabledChange?.(params.elementBEnabled);
+    hooks.onStructureChange();
+  });
+
+  const elementBColorBindings = [
+    bindColorPair(
+      "el-b-fill",
+      {
+        get: () => params.elementBFillColor,
+        set: (hex) => {
+          params.elementBFillColor = hex;
+        },
+      },
+      hooks.onColorChange,
+    ),
+    bindColorPair(
+      "el-b-outline",
+      {
+        get: () => params.elementBOutlineColor,
+        set: (hex) => {
+          params.elementBOutlineColor = hex;
+        },
+      },
+      hooks.onColorChange,
+    ),
+  ].filter(Boolean);
+
+  const elementBBindings = [
+    bindSliderPair(
+      "el-b-offset-x",
+      {
+        get: () => params.elementBOffsetX,
+        set: (n) => {
+          params.elementBOffsetX = n;
+        },
+      },
+      hooks.onStructureChange,
+    ),
+    bindSliderPair(
+      "el-b-offset-y",
+      {
+        get: () => params.elementBOffsetY,
+        set: (n) => {
+          params.elementBOffsetY = n;
+        },
+      },
+      hooks.onStructureChange,
+    ),
+    bindSliderPair(
+      "el-b-rotate",
+      {
+        get: () => params.elementBRotateDeg,
+        set: (n) => {
+          params.elementBRotateDeg = n;
+        },
+      },
+      hooks.onStructureChange,
+    ),
+    bindSliderPair(
+      "el-b-scale",
+      {
+        get: () => params.elementBScale,
+        set: (n) => {
+          params.elementBScale = Math.min(200, Math.max(10, n));
+        },
+      },
+      hooks.onStructureChange,
+    ),
+  ].filter(Boolean);
 
   const elementFile = document.getElementById("element-svg-file");
   if (elementFile) {
@@ -363,6 +481,7 @@ export function initDesignPanel(params, hooks) {
   return {
     refreshShapePresetLabels: renderShapePresetOptions,
     refreshElementPresetLabels: renderElementPresetGrid,
+    refreshElementBPresetLabels: renderElementBPresetGrid,
     syncFromParams() {
       params.elementGradientStops = ensureGradientStops(
         params.elementGradientStops,
@@ -371,8 +490,11 @@ export function initDesignPanel(params, hooks) {
       );
       if (shapeSelect) shapeSelect.value = String(params.svgPresetIndex);
       syncElementPresetUi();
+      syncElementBUi();
       for (const b of bindings) b?.syncFromParams();
+      for (const b of elementBBindings) b?.syncFromParams();
       for (const b of colorBindings) b?.syncFromParams();
+      for (const b of elementBColorBindings) b?.syncFromParams();
       syncGradientUi();
       syncOverlapUi();
       syncCopyUi();

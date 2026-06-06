@@ -26,6 +26,18 @@ export function defaultParams() {
     elementCopyOffsetAngle: 0,
     elementCopyRotateStep: 0,
     elementCopyScaleStep: 100,
+
+    elementBEnabled: false,
+    /** @type {number | null} */
+    elementBPresetIndex: 3,
+    elementBHasCustomUnit: false,
+    elementBOffsetX: 0,
+    elementBOffsetY: 0,
+    elementBRotateDeg: 0,
+    elementBScale: 80,
+    elementBFillColor: "#ff6b6b",
+    elementBOutlineColor: "#e04040",
+
     sharedScaleDirectionX: 1,
     sharedScaleDirectionY: 1,
     sensorTypeIndex: 0,

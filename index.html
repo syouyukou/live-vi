@@ -95,8 +95,8 @@
           <section class="composer-section composer-section-block">
             <h2 class="composer-section-title" data-i18n="section.element">Element</h2>
             <div class="composer-param composer-param-stack">
-              <span class="composer-label" data-i18n="label.elementPreset">Preset</span>
-              <div id="element-preset-grid" class="composer-element-preset-grid" role="listbox" aria-label="Element presets"></div>
+              <span class="composer-label" data-i18n="label.elementA">Element A</span>
+              <div id="element-preset-grid" class="composer-element-preset-grid" role="listbox" aria-label="Element A presets"></div>
             </div>
             <div class="composer-param">
               <span class="composer-label" data-i18n="label.angle">Angle</span>
@@ -124,6 +124,56 @@
               <div class="composer-param-control">
                 <input type="range" id="el-pitch-slider" class="composer-slider" min="5" max="50" step="0.1" value="30.2" />
                 <input type="number" id="el-pitch-num" class="composer-num" min="5" max="50" step="0.1" value="30.21" />
+              </div>
+            </div>
+            <div class="composer-param composer-param-stack composer-element-b-block">
+              <span class="composer-label" data-i18n="label.elementB">Element B</span>
+              <div id="el-b-panel" class="composer-element-b-panel">
+                <label class="composer-element-b-check">
+                  <input type="checkbox" id="el-b-enabled" class="composer-check" />
+                  <span data-i18n="label.elementBEnable">Enable second element</span>
+                </label>
+                <div id="el-b-fields" class="composer-element-b-fields is-disabled">
+                  <div id="element-b-preset-grid" class="composer-element-preset-grid" role="listbox" aria-label="Element B presets"></div>
+                  <div class="composer-param">
+                    <span class="composer-label" data-i18n="label.elementBOffsetX">Offset X</span>
+                    <div class="composer-param-control">
+                      <input type="range" id="el-b-offset-x-slider" class="composer-slider" min="-40" max="40" step="0.5" value="0" />
+                      <input type="number" id="el-b-offset-x-num" class="composer-num" min="-40" max="40" step="0.5" value="0.00" />
+                    </div>
+                  </div>
+                  <div class="composer-param">
+                    <span class="composer-label" data-i18n="label.elementBOffsetY">Offset Y</span>
+                    <div class="composer-param-control">
+                      <input type="range" id="el-b-offset-y-slider" class="composer-slider" min="-40" max="40" step="0.5" value="0" />
+                      <input type="number" id="el-b-offset-y-num" class="composer-num" min="-40" max="40" step="0.5" value="0.00" />
+                    </div>
+                  </div>
+                  <div class="composer-param">
+                    <span class="composer-label" data-i18n="label.elementBRotate">Rotate</span>
+                    <div class="composer-param-control">
+                      <input type="range" id="el-b-rotate-slider" class="composer-slider" min="-180" max="180" step="1" value="0" />
+                      <input type="number" id="el-b-rotate-num" class="composer-num" min="-180" max="180" step="1" value="0" />
+                    </div>
+                  </div>
+                  <div class="composer-param">
+                    <span class="composer-label" data-i18n="label.elementBScale">Scale</span>
+                    <div class="composer-param-control">
+                      <input type="range" id="el-b-scale-slider" class="composer-slider" min="10" max="200" step="1" value="80" />
+                      <input type="number" id="el-b-scale-num" class="composer-num" min="10" max="200" step="1" value="80" />
+                    </div>
+                  </div>
+                  <div class="composer-color-rows composer-element-b-colors">
+                    <div class="composer-color-row">
+                      <span class="composer-label" data-i18n="label.fillColor">Fill</span>
+                      <input type="color" id="el-b-fill-color" class="composer-color-pick" value="#ff6b6b" />
+                    </div>
+                    <div class="composer-color-row">
+                      <span class="composer-label" data-i18n="label.outlineColor">Outline</span>
+                      <input type="color" id="el-b-outline-color" class="composer-color-pick" value="#e04040" />
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
             <div class="composer-param">

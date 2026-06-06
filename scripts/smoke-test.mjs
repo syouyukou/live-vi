@@ -370,6 +370,22 @@ const swappedFill = panelParams.fillColor;
 const swappedOutline = panelParams.outlineColor;
 assert("color swap exchanges values", swappedFill !== "#87CEEB" || swappedOutline !== "#5eb0ff");
 
+console.log("\n=== Element B slots ===");
+const { applySlotToPlacement } = await import(join(root, "src/engine/element-slots.js"));
+const basePt = { x: 10, y: 20, z: 0, angle: 0, t: 0.5, index: 0 };
+const slotted = applySlotToPlacement(basePt, { offsetX: 5, offsetY: -2, rotateDeg: 90, scale: 50 });
+assert("slot offset x", Math.abs(slotted.x - 15) < 0.01);
+assert("slot offset y", Math.abs(slotted.y - 18) < 0.01);
+assert("slot scale mul", Math.abs((slotted.copyScaleMul ?? 1) - 0.5) < 0.01);
+const bParams = defaultParams();
+bParams.elementBEnabled = true;
+bParams.elementBOffsetX = 4;
+const jsonB = exportConfig(bParams, timeline, appFlow);
+const bParams2 = defaultParams();
+importConfig(jsonB, bParams2, timeline, appFlow);
+assert("element B round-trip enabled", bParams2.elementBEnabled === true);
+assert("element B round-trip offset", bParams2.elementBOffsetX === 4);
+
 console.log("\n=== Single-preview copy ===");
 const singlePlacement = { x: 0, y: 0, z: 0, angle: 0, t: 0.5, index: 0 };
 const previewCopy = defaultParams();

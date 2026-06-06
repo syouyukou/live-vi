@@ -11,6 +11,7 @@ import {
 import { parseUnitSvg, applyUnitOutlineWidth } from "./unit.js";
 import { buildMergedOutlineGeometry } from "./overlap-outline.js";
 import { expandPlacementsWithCopies } from "./placement-copy.js";
+import { applySlotToPlacement, getElementBTransform } from "./element-slots.js";
 
 export class ViRenderer {
   /** @param {HTMLElement} host */
@@ -46,6 +47,8 @@ export class ViRenderer {
     this.scene.add(this.contentGroup);
     /** @type {THREE.InstancedMesh[]} */
     this.instanceLayers = [];
+    /** @type {{ mesh: THREE.InstancedMesh, shape: import("./unit.js").UnitShape, slot: import("./element-slots.js").SlotTransform | null, slotId: "a" | "b", kind: "fill" | "outline" }[]} */
+    this.slotMeshes = [];
     /** @type {THREE.Mesh | null} */
     this.mergedOutlineMesh = null;
     this.dummy = new THREE.Object3D();
@@ -81,11 +84,33 @@ export class ViRenderer {
     this.structureDirty = true;
   }
 
+  /** @param {import("./unit.js").UnitShape | null} unit */
   setUnitB(unit) {
     if (this.unitShapeB?.geometry) this.unitShapeB.geometry.dispose();
     if (this.unitShapeB?.outlineGeometry) this.unitShapeB.outlineGeometry.dispose();
     this.unitShapeB = unit;
     this.structureDirty = true;
+  }
+
+  hasElementB() {
+    return Boolean(this.params?.elementBEnabled && this.unitShapeB);
+  }
+
+  /** @returns {{ shape: import("./unit.js").UnitShape, slot: import("./element-slots.js").SlotTransform | null, slotId: "a" | "b" }[]} */
+  activeElementSlots() {
+    const slots = [{ shape: this.unitShape, slot: null, slotId: /** @type {const} */ ("a") }];
+    if (this.hasElementB() && this.unitShapeB) {
+      slots.push({
+        shape: this.unitShapeB,
+        slot: getElementBTransform(this.params),
+        slotId: "b",
+      });
+    }
+    return slots;
+  }
+
+  canMergeOutlines() {
+    return this.activeElementSlots().some((entry) => entry.shape?.geometry);
   }
 
   clientToWorld(clientX, clientY) {
@@ -147,26 +172,24 @@ export class ViRenderer {
   }
 
   skipsOutlineLayer() {
-    return !this.unitShape?.outlineGeometry;
-  }
-
-  /** Index of main fill InstancedMesh in instanceLayers. */
-  mainFillLayerIndex() {
-    if (this.skipsOutlineLayer() || this.usesMergedOverlap()) return 0;
-    return 1;
+    if (this.usesMergedOverlap()) return !this.canMergeOutlines();
+    return !this.activeElementSlots().some((entry) => entry.shape?.outlineGeometry);
   }
 
   /** @returns {THREE.InstancedMesh | null} */
   getMainFillMesh() {
-    return this.instanceLayers[this.mainFillLayerIndex()] ?? null;
+    return this.slotMeshes.find((layer) => layer.slotId === "a" && layer.kind === "fill")?.mesh ?? null;
   }
 
-  /** @param {import("./sampler.js").Placement} placement @param {number} instanceIndex */
-  resolveFillColor(placement, instanceIndex, unitShape = null) {
+  /** @param {import("./sampler.js").Placement} placement @param {number} instanceIndex @param {import("./unit.js").UnitShape | null} [unitShape] @param {"a" | "b"} [slotId] */
+  resolveFillColor(placement, instanceIndex, unitShape = null, slotId = "a") {
     const p = this.params;
     const unit = unitShape ?? this.unitShape;
     if (unit?.useSvgColors && !p.elementUseGradient) {
       return new THREE.Color(unit.fillColor ?? "#111111");
+    }
+    if (slotId === "b") {
+      return new THREE.Color(p.elementBFillColor ?? "#ff6b6b");
     }
     if (p.elementUseGradient) {
       return new THREE.Color(p.fillColor ?? "#ffffff");
@@ -192,10 +215,13 @@ export class ViRenderer {
     }
   }
 
-  /** @param {import("./sampler.js").Placement} placement @param {number} instanceIndex */
-  resolveOutlineColor(placement, instanceIndex, unitShape = null) {
+  /** @param {import("./sampler.js").Placement} placement @param {number} instanceIndex @param {import("./unit.js").UnitShape | null} [unitShape] @param {"a" | "b"} [slotId] */
+  resolveOutlineColor(placement, instanceIndex, unitShape = null, slotId = "a") {
     const p = this.params;
     const unit = unitShape ?? this.unitShape;
+    if (slotId === "b") {
+      return new THREE.Color(p.elementBOutlineColor ?? "#e04040");
+    }
     if (unit?.useSvgColors) {
       const hex = unit.outlineColor ?? unit.fillColor ?? "#111111";
       return new THREE.Color(hex);
@@ -210,13 +236,14 @@ export class ViRenderer {
     outline = false,
     unitShape = null,
     useVertexGradient = false,
+    slotId = "a",
   ) {
     let color = 0xffffff;
     if (!useVertexGradient) {
       const placement = { t: 0, index: instanceIndex };
       color = outline
-        ? this.resolveOutlineColor(placement, instanceIndex, unitShape)
-        : this.resolveFillColor(placement, instanceIndex, unitShape);
+        ? this.resolveOutlineColor(placement, instanceIndex, unitShape, slotId)
+        : this.resolveFillColor(placement, instanceIndex, unitShape, slotId);
     }
     return new THREE.MeshBasicMaterial({
       color,
@@ -235,6 +262,7 @@ export class ViRenderer {
       mesh.material.dispose();
     }
     this.instanceLayers = [];
+    this.slotMeshes = [];
     this.disposeMergedOutline();
   }
 
@@ -248,17 +276,20 @@ export class ViRenderer {
 
   /** @param {import("./sampler.js").Placement[]} placements */
   updateMergedOutline(placements) {
-    if (!this.usesMergedOverlap() || this.skipsOutlineLayer() || !this.unitShape) {
+    if (!this.usesMergedOverlap() || !this.canMergeOutlines()) {
       this.disposeMergedOutline();
       return;
     }
 
-    const geom = buildMergedOutlineGeometry(
-      placements,
-      this.unitShape.geometry,
-      this.params,
-      this.mouse,
-    );
+    const outlineSlots = this.activeElementSlots().map((entry) => ({
+      geometry: entry.shape.geometry,
+      offsetX: entry.slot?.offsetX,
+      offsetY: entry.slot?.offsetY,
+      rotateDeg: entry.slot?.rotateDeg,
+      scale: entry.slot?.scale,
+    }));
+
+    const geom = buildMergedOutlineGeometry(placements, outlineSlots, this.params, this.mouse);
     if (!geom) {
       this.disposeMergedOutline();
       return;
@@ -284,11 +315,11 @@ export class ViRenderer {
     }
   }
 
-  applyPlacementsToMesh(mesh, placements, unitShape, opacity, phaseOffset, scaleMul = 1) {
+  applyPlacementsToMesh(mesh, placements, unitShape, opacity, phaseOffset, scaleMul = 1, slot = null) {
     const p = this.params;
 
     for (let i = 0; i < placements.length; i++) {
-      const pt = placements[i];
+      const pt = applySlotToPlacement(placements[i], slot);
       const { scaleX, scaleY } = instanceScales(pt, p, this.mouse);
       const lineBoost = 1 + (p.elementLineWidth - 1) * 0.08;
       const rotZ = instanceAngle(pt.angle, pt, p, this.mouse);
@@ -318,50 +349,42 @@ export class ViRenderer {
     if (totalA === 0) return;
 
     this.syncUnitOutlineGeometry();
-    const skipOutline = this.skipsOutlineLayer();
     const mergedOverlap = this.usesMergedOverlap();
     const fillGradient = this.usesFillGradient();
-    const outlineGeom = this.unitShape.outlineGeometry;
-    if (!skipOutline && !mergedOverlap && outlineGeom) {
-      const outlineA = new THREE.InstancedMesh(
-        outlineGeom,
-        this.createMaterial(1, true, 0, true, this.unitShape, false),
-        totalA,
-      );
-      outlineA.renderOrder = 0;
-      this.contentGroup.add(outlineA);
-      this.instanceLayers.push(outlineA);
-      this.applyPlacementsToMesh(outlineA, placementsA, this.unitShape, 1, 0);
-    }
+    const slots = this.activeElementSlots();
+    let renderOrder = 0;
 
-    const mainA = new THREE.InstancedMesh(
-      this.unitShape.geometry,
-      this.createMaterial(1, true, 0, false, this.unitShape, fillGradient),
-      totalA,
-    );
-    mainA.renderOrder = 1;
-    this.contentGroup.add(mainA);
-    this.instanceLayers.push(mainA);
-    this.applyPlacementsToMesh(mainA, placementsA, this.unitShape, 1, 0);
-
-    if (mergedOverlap && !skipOutline) {
+    if (mergedOverlap) {
       this.updateMergedOutline(placementsA);
     }
 
-    if (p.enableSecondLayer && this.unitShapeB) {
-      const placementsB = this.collectPlacements(p.secondLayerPhase);
-      const totalB = placementsB.length;
-      if (totalB > 0) {
-        const mainB = new THREE.InstancedMesh(
-          this.unitShapeB.geometry,
-          this.createMaterial(p.secondLayerOpacity, false, 1),
-          totalB,
+    for (const entry of slots) {
+      const { shape, slot, slotId } = entry;
+      const outlineGeom = shape.outlineGeometry;
+      if (!mergedOverlap && outlineGeom) {
+        const outlineMesh = new THREE.InstancedMesh(
+          outlineGeom,
+          this.createMaterial(1, true, 0, true, shape, false, slotId),
+          totalA,
         );
-        mainB.renderOrder = 2;
-        this.contentGroup.add(mainB);
-        this.instanceLayers.push(mainB);
-        this.applyPlacementsToMesh(mainB, placementsB, this.unitShapeB, p.secondLayerOpacity, p.secondLayerPhase);
+        outlineMesh.renderOrder = renderOrder++;
+        this.contentGroup.add(outlineMesh);
+        this.instanceLayers.push(outlineMesh);
+        this.slotMeshes.push({ mesh: outlineMesh, shape, slot, slotId, kind: "outline" });
+        this.applyPlacementsToMesh(outlineMesh, placementsA, shape, 1, 0, 1, slot);
       }
+
+      const useGradient = fillGradient && slotId === "a";
+      const fillMesh = new THREE.InstancedMesh(
+        shape.geometry,
+        this.createMaterial(1, true, 0, false, shape, useGradient, slotId),
+        totalA,
+      );
+      fillMesh.renderOrder = renderOrder++;
+      this.contentGroup.add(fillMesh);
+      this.instanceLayers.push(fillMesh);
+      this.slotMeshes.push({ mesh: fillMesh, shape, slot, slotId, kind: "fill" });
+      this.applyPlacementsToMesh(fillMesh, placementsA, shape, 1, 0, 1, slot);
     }
 
     for (let e = 0; e < p.echoLayers; e++) {
@@ -389,25 +412,15 @@ export class ViRenderer {
     if (this.structureDirty) this.rebuildStructure();
     else {
       const placementsA = this.collectPlacements(0);
-      const mainIdx = this.mainFillLayerIndex();
-      if (!this.skipsOutlineLayer() && !this.usesMergedOverlap() && this.instanceLayers[0]) {
-        this.applyPlacementsToMesh(this.instanceLayers[0], placementsA, this.unitShape, 1, 0);
-      }
-      const mainMesh = this.instanceLayers[mainIdx];
-      if (mainMesh) {
-        this.applyPlacementsToMesh(mainMesh, placementsA, this.unitShape, 1, 0);
+      for (const layer of this.slotMeshes) {
+        this.applyPlacementsToMesh(layer.mesh, placementsA, layer.shape, 1, 0, 1, layer.slot);
       }
       if (this.usesMergedOverlap()) {
         this.updateMergedOutline(placementsA);
       }
-      let idx = mainIdx + 1;
-      if (p.enableSecondLayer && this.unitShapeB && this.instanceLayers[idx]) {
-        const placementsB = this.collectPlacements(p.secondLayerPhase);
-        this.applyPlacementsToMesh(this.instanceLayers[idx], placementsB, this.unitShapeB, p.secondLayerOpacity, p.secondLayerPhase);
-        idx++;
-      }
+      const echoStart = this.slotMeshes.length;
       for (let e = 0; e < p.echoLayers; e++) {
-        const mesh = this.instanceLayers[idx + e];
+        const mesh = this.instanceLayers[echoStart + e];
         if (mesh) this.applyPlacementsToMesh(mesh, placementsA, this.unitShape, p.echoOpacity, 0);
       }
     }

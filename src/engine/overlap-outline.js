@@ -1,7 +1,10 @@
 import * as THREE from "three";
 import { instanceAngle, instanceScales } from "./instance-modifiers.js";
+import { applySlotToPlacement } from "./element-slots.js";
 
 const MAX_CANVAS = 768;
+
+/** @typedef {{ geometry: THREE.BufferGeometry, offsetX?: number, offsetY?: number, rotateDeg?: number, scale?: number }} OutlineSlot */
 
 /**
  * @param {import("./sampler.js").Placement} pt
@@ -9,12 +12,14 @@ const MAX_CANVAS = 768;
  * @param {import("./params.js").ViParams} params
  * @param {{ world: { x: number, y: number }, active: boolean, direction?: number, directionValid?: boolean }} mouse
  * @param {number} scaleMul
+ * @param {{ offsetX?: number, offsetY?: number, rotateDeg?: number, scale?: number } | null} [slot]
  */
-function placementBounds(pt, unitGeom, params, mouse, scaleMul) {
-  const { scaleX, scaleY } = instanceScales(pt, params, mouse);
+function placementBounds(pt, unitGeom, params, mouse, scaleMul, slot = null) {
+  const placed = slot ? applySlotToPlacement(pt, slot) : pt;
+  const { scaleX, scaleY } = instanceScales(placed, params, mouse);
   const lineBoost = 1 + (params.elementLineWidth - 1) * 0.08;
-  const copyMul = pt.copyScaleMul ?? 1;
-  const rotZ = instanceAngle(pt.angle, pt, params, mouse);
+  const copyMul = placed.copyScaleMul ?? 1;
+  const rotZ = instanceAngle(placed.angle, placed, params, mouse);
   const cos = Math.cos(rotZ);
   const sin = Math.sin(rotZ);
   const sx = scaleX * lineBoost * scaleMul * copyMul;
@@ -27,8 +32,8 @@ function placementBounds(pt, unitGeom, params, mouse, scaleMul) {
   for (let i = 0; i < pos.length; i += 3) {
     const ux = pos[i] * sx;
     const uy = pos[i + 1] * sy;
-    const x = pt.x + ux * cos - uy * sin;
-    const y = pt.y + ux * sin + uy * cos;
+    const x = placed.x + ux * cos - uy * sin;
+    const y = placed.y + ux * sin + uy * cos;
     minX = Math.min(minX, x);
     minY = Math.min(minY, y);
     maxX = Math.max(maxX, x);
@@ -39,22 +44,38 @@ function placementBounds(pt, unitGeom, params, mouse, scaleMul) {
 
 /**
  * @param {import("./sampler.js").Placement[]} placements
- * @param {THREE.BufferGeometry} unitGeom
+ * @param {OutlineSlot[]} slots
  * @param {import("./params.js").ViParams} params
  * @param {{ world: { x: number, y: number }, active: boolean }} mouse
  */
-function computeWorldBounds(placements, unitGeom, params, mouse) {
+function computeWorldBounds(placements, slots, params, mouse) {
   const outlineBoost = params.outlineScale ?? 1.06;
   let minX = Infinity;
   let minY = Infinity;
   let maxX = -Infinity;
   let maxY = -Infinity;
   for (const pt of placements) {
-    const b = placementBounds(pt, unitGeom, params, mouse, outlineBoost);
-    if (b.minX < minX) minX = b.minX;
-    if (b.minY < minY) minY = b.minY;
-    if (b.maxX > maxX) maxX = b.maxX;
-    if (b.maxY > maxY) maxY = b.maxY;
+    for (const slot of slots) {
+      const b = placementBounds(
+        pt,
+        slot.geometry,
+        params,
+        mouse,
+        outlineBoost,
+        slot.offsetX != null || slot.rotateDeg != null || slot.scale != null
+          ? {
+              offsetX: slot.offsetX ?? 0,
+              offsetY: slot.offsetY ?? 0,
+              rotateDeg: slot.rotateDeg ?? 0,
+              scale: slot.scale ?? 100,
+            }
+          : null,
+      );
+      if (b.minX < minX) minX = b.minX;
+      if (b.minY < minY) minY = b.minY;
+      if (b.maxX > maxX) maxX = b.maxX;
+      if (b.maxY > maxY) maxY = b.maxY;
+    }
   }
   const pad = 6;
   return {
@@ -127,17 +148,80 @@ function ringToGeometry(ring, w, h, bounds) {
 }
 
 /**
- * Build a single merged outline mesh geometry for overlapping instances.
- * @param {import("./sampler.js").Placement[]} placements
+ * @param {CanvasRenderingContext2D} ctx
+ * @param {import("./sampler.js").Placement} pt
  * @param {THREE.BufferGeometry} unitGeom
+ * @param {import("./params.js").ViParams} params
+ * @param {{ world: { x: number, y: number }, active: boolean }} mouse
+ * @param {{ minX: number, minY: number, maxX: number, maxY: number }} bounds
+ * @param {number} w
+ * @param {number} h
+ * @param {{ offsetX?: number, offsetY?: number, rotateDeg?: number, scale?: number } | null} [slot]
+ */
+function rasterizePlacement(ctx, pt, unitGeom, params, mouse, bounds, w, h, slot = null) {
+  const placed = slot ? applySlotToPlacement(pt, slot) : pt;
+  const { scaleX, scaleY } = instanceScales(placed, params, mouse);
+  const lineBoost = 1 + (params.elementLineWidth - 1) * 0.08;
+  const copyMul = placed.copyScaleMul ?? 1;
+  const rotZ = instanceAngle(placed.angle, placed, params, mouse);
+  const cos = Math.cos(rotZ);
+  const sin = Math.sin(rotZ);
+  const sx = scaleX * lineBoost * copyMul;
+  const sy = scaleY * lineBoost * copyMul;
+  const pos = unitGeom.attributes.position.array;
+  const index = unitGeom.index;
+  const spanX = bounds.maxX - bounds.minX;
+  const spanY = bounds.maxY - bounds.minY;
+
+  const tri = (ia, ib, ic) => {
+    const toPx = (ux, uy) => {
+      const x = placed.x + ux * cos - uy * sin;
+      const y = placed.y + ux * sin + uy * cos;
+      return {
+        px: ((x - bounds.minX) / spanX) * w,
+        py: h - ((y - bounds.minY) / spanY) * h,
+      };
+    };
+    const a = toPx(pos[ia * 3] * sx, pos[ia * 3 + 1] * sy);
+    const b = toPx(pos[ib * 3] * sx, pos[ib * 3 + 1] * sy);
+    const c = toPx(pos[ic * 3] * sx, pos[ic * 3 + 1] * sy);
+    ctx.beginPath();
+    ctx.moveTo(a.px, a.py);
+    ctx.lineTo(b.px, b.py);
+    ctx.lineTo(c.px, c.py);
+    ctx.closePath();
+    ctx.fill();
+  };
+
+  if (index) {
+    const arr = index.array;
+    const vertCount = pos.length / 3;
+    for (let i = 0; i < arr.length; i += 3) {
+      const a = arr[i];
+      const b = arr[i + 1];
+      const c = arr[i + 2];
+      if (a >= vertCount || b >= vertCount || c >= vertCount) continue;
+      tri(a, b, c);
+    }
+  } else {
+    for (let i = 0; i < pos.length; i += 9) {
+      tri(i / 3, i / 3 + 1, i / 3 + 2);
+    }
+  }
+}
+
+/**
+ * Build a single merged outline mesh geometry for overlapping instances (supports multiple element slots).
+ * @param {import("./sampler.js").Placement[]} placements
+ * @param {OutlineSlot[]} slots
  * @param {import("./params.js").ViParams} params
  * @param {{ world: { x: number, y: number }, active: boolean }} mouse
  * @returns {THREE.BufferGeometry | null}
  */
-export function buildMergedOutlineGeometry(placements, unitGeom, params, mouse) {
-  if (!placements.length) return null;
+export function buildMergedOutlineGeometry(placements, slots, params, mouse) {
+  if (!placements.length || !slots.length) return null;
 
-  const bounds = computeWorldBounds(placements, unitGeom, params, mouse);
+  const bounds = computeWorldBounds(placements, slots, params, mouse);
   const spanX = bounds.maxX - bounds.minX;
   const spanY = bounds.maxY - bounds.minY;
   if (spanX <= 0 || spanY <= 0) return null;
@@ -161,51 +245,17 @@ export function buildMergedOutlineGeometry(placements, unitGeom, params, mouse) 
 
   ctx.fillStyle = "#fff";
   for (const pt of placements) {
-    const { scaleX, scaleY } = instanceScales(pt, params, mouse);
-    const lineBoost = 1 + (params.elementLineWidth - 1) * 0.08;
-    const copyMul = pt.copyScaleMul ?? 1;
-    const rotZ = instanceAngle(pt.angle, pt, params, mouse);
-    const cos = Math.cos(rotZ);
-    const sin = Math.sin(rotZ);
-    const sx = scaleX * lineBoost * copyMul;
-    const sy = scaleY * lineBoost * copyMul;
-    const pos = unitGeom.attributes.position.array;
-    const index = unitGeom.index;
-
-    const tri = (ia, ib, ic) => {
-      const toPx = (ux, uy) => {
-        const x = pt.x + ux * cos - uy * sin;
-        const y = pt.y + ux * sin + uy * cos;
-        return {
-          px: ((x - bounds.minX) / spanX) * w,
-          py: h - ((y - bounds.minY) / spanY) * h,
-        };
-      };
-      const a = toPx(pos[ia * 3] * sx, pos[ia * 3 + 1] * sy);
-      const b = toPx(pos[ib * 3] * sx, pos[ib * 3 + 1] * sy);
-      const c = toPx(pos[ic * 3] * sx, pos[ic * 3 + 1] * sy);
-      ctx.beginPath();
-      ctx.moveTo(a.px, a.py);
-      ctx.lineTo(b.px, b.py);
-      ctx.lineTo(c.px, c.py);
-      ctx.closePath();
-      ctx.fill();
-    };
-
-    if (index) {
-      const arr = index.array;
-      const vertCount = pos.length / 3;
-      for (let i = 0; i < arr.length; i += 3) {
-        const a = arr[i];
-        const b = arr[i + 1];
-        const c = arr[i + 2];
-        if (a >= vertCount || b >= vertCount || c >= vertCount) continue;
-        tri(a, b, c);
-      }
-    } else {
-      for (let i = 0; i < pos.length; i += 9) {
-        tri(i / 3, i / 3 + 1, i / 3 + 2);
-      }
+    for (const slot of slots) {
+      const transform =
+        slot.offsetX != null || slot.rotateDeg != null || slot.scale != null
+          ? {
+              offsetX: slot.offsetX ?? 0,
+              offsetY: slot.offsetY ?? 0,
+              rotateDeg: slot.rotateDeg ?? 0,
+              scale: slot.scale ?? 100,
+            }
+          : null;
+      rasterizePlacement(ctx, pt, slot.geometry, params, mouse, bounds, w, h, transform);
     }
   }
 
