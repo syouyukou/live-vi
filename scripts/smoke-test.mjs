@@ -74,17 +74,49 @@ assert("parseUnitSvg rejects garbage", parseUnitSvg("<html></html>") === null);
 const curveSvg = readFileSync(join(root, "public/test-fixtures/curve-2x.svg"), "utf8");
 const curveUnit = parseUnitSvg(curveSvg);
 assert("parseUnitSvg loads curve fixture", curveUnit !== null && curveUnit.unitLength > 0);
+assert("parseUnitSvg calligraphic has no outline geom", !curveUnit?.outlineGeometry);
+assert(
+  "parseUnitSvg filled preset has outline geom",
+  parseUnitSvg(SVG_PRESETS[1].unit)?.outlineGeometry != null,
+);
 assert(
   "parseUnitSvg useSvgColors",
   parseUnitSvg(curveSvg, { useSvgColors: true })?.fillColor?.startsWith("#"),
 );
+const openLineWithFill = `<svg viewBox="0 0 200 40" xmlns="http://www.w3.org/2000/svg" style="fill:#FFD700"><path d="M10,20 L190,20"/></svg>`;
+const openLineUnit = parseUnitSvg(openLineWithFill);
+assert("parseUnitSvg open path with inherited fill is calligraphic", openLineUnit?.isCalligraphic === true);
+assert("parseUnitSvg open path with inherited fill has no outline", !openLineUnit?.outlineGeometry);
 
 for (const preset of SVG_PRESETS) {
-  const paths = parsePathSvg(preset.path);
   const unit = parseUnitSvg(preset.unit);
-  assert(`preset "${preset.name}" path`, paths.length > 0);
   assert(`preset "${preset.name}" unit`, unit !== null);
+  if (preset.noPath) {
+    assert(`preset "${preset.name}" no path`, parsePathSvg(preset.path).length === 0);
+  } else {
+    const paths = parsePathSvg(preset.path);
+    assert(`preset "${preset.name}" path`, paths.length > 0);
+  }
 }
+
+const artboardPathSvg = `<svg viewBox="0 0 200 400" xmlns="http://www.w3.org/2000/svg">
+  <rect x="0" y="0" width="200" height="400" fill="none" stroke="#000"/>
+  <path fill="none" stroke="#000" d="M120,20 C180,80 180,320 120,380"/>
+</svg>`;
+assert(
+  "parsePathSvg drops artboard rect frame",
+  parsePathSvg(artboardPathSvg).length === 1,
+);
+assert("parsePathSvg keeps open curve fixture", parsePathSvg(curveSvg).length === 1);
+
+const kanjiSvg = readFileSync(join(root, "public/test-fixtures/kanji-li-6-2x.svg"), "utf8");
+assert("parsePathSvg keeps compound path subpaths", parsePathSvg(kanjiSvg).length >= 6);
+const kanjiUnit = parseUnitSvg(kanjiSvg);
+assert("parseUnitSvg loads compound kanji fixture", kanjiUnit !== null);
+assert(
+  "parseUnitSvg compound kanji has more fill verts than createShapes-only",
+  kanjiUnit.geometry.attributes.position.count > 2000,
+);
 
 console.log("\n=== Config round-trip ===");
 const params = defaultParams();
@@ -227,6 +259,131 @@ assert("nextUiLang cycles", nextUiLang("both") === "en");
 console.log("\n=== Asset hash ===");
 const h = await hashSvgText("<svg></svg>");
 assert("hashSvgText 64 hex chars", h.length === 64);
+
+console.log("\n=== Design panel DOM ===");
+const indexHtml = readFileSync(join(root, "index.html"), "utf8");
+const panelDom = new JSDOM(indexHtml, { url: "http://localhost/" });
+const panelDoc = panelDom.window.document;
+const panelIds = [
+  "panel-design",
+  "el-angle-slider",
+  "el-angle-num",
+  "el-length-slider",
+  "el-length-num",
+  "el-width-slider",
+  "el-width-num",
+  "el-pitch-slider",
+  "el-pitch-num",
+  "el-copy-enabled",
+  "el-copy-fields",
+  "el-copy-count",
+  "el-copy-reset",
+  "el-gradient",
+  "el-gradient-map-root",
+  "el-fill-color",
+  "el-outline-color",
+  "el-color-swap",
+];
+for (const id of panelIds) {
+  assert(`index.html #${id}`, panelDoc.getElementById(id) != null);
+}
+assert("overlap buttons", panelDoc.querySelectorAll("[data-el-overlap]").length === 2);
+
+console.log("\n=== Design panel bindings ===");
+globalThis.window = panelDom.window;
+globalThis.document = panelDom.window.document;
+globalThis.HTMLElement = panelDom.window.HTMLElement;
+globalThis.Event = panelDom.window.Event;
+globalThis.Node = panelDom.window.Node;
+
+const { initDesignPanel } = await import(join(root, "src/ui/design-panel.js"));
+const panelParams = defaultParams();
+let panelStructureChanges = 0;
+let panelColorChanges = 0;
+initDesignPanel(panelParams, {
+  hasActivePath: () => false,
+  onPresetChange: () => {},
+  onElementPresetChange: () => {},
+  onPathSvg: () => {},
+  onUnitSvg: async () => true,
+  onStructureChange: () => {
+    panelStructureChanges += 1;
+  },
+  onColorChange: () => {
+    panelColorChanges += 1;
+  },
+});
+
+const fireInput = (el, value) => {
+  el.value = value;
+  el.dispatchEvent(new panelDom.window.Event("input", { bubbles: true }));
+};
+const fireChange = (el, value) => {
+  el.value = value;
+  el.dispatchEvent(new panelDom.window.Event("change", { bubbles: true }));
+};
+
+const angleSlider = panelDoc.getElementById("el-angle-slider");
+fireInput(angleSlider, "200");
+assert("angle slider → params", Math.abs(panelParams.elementAngleDeg - 200) < 0.1);
+assert("angle slider triggers structure change", panelStructureChanges > 0);
+
+panelDoc.querySelector('[data-el-overlap="merged"]')?.click();
+assert("overlap merged", panelParams.elementOverlapMode === "merged");
+assert(
+  "overlap merged active class",
+  panelDoc.querySelector('[data-el-overlap="merged"]')?.classList.contains("is-active"),
+);
+
+const copyCheck = panelDoc.getElementById("el-copy-enabled");
+fireChange(copyCheck, true);
+copyCheck.checked = true;
+fireChange(copyCheck, true);
+assert("copy checkbox enables params", panelParams.elementCopyEnabled === true);
+assert(
+  "copy fields lose is-disabled",
+  !panelDoc.getElementById("el-copy-fields")?.classList.contains("is-disabled"),
+);
+
+const copyCount = panelDoc.getElementById("el-copy-count");
+fireInput(copyCount, "5");
+assert("copy count clamps to params", panelParams.elementCopyCount === 5);
+
+panelParams.pathInstanceLimit = 1;
+const pitchBefore = panelParams.pathInstanceLimit;
+fireInput(panelDoc.getElementById("el-pitch-slider"), "40");
+assert("pitch without path keeps preview limit", panelParams.pathInstanceLimit === pitchBefore);
+assert("pitch updates value", Math.abs(panelParams.pitch - 0.04) < 0.0001);
+
+const gradientToggle = panelDoc.getElementById("el-gradient");
+gradientToggle.checked = true;
+fireChange(gradientToggle, true);
+assert("gradient toggle on", panelParams.elementUseGradient === true);
+assert(
+  "gradient map visible",
+  !panelDoc.getElementById("el-gradient-map-wrap")?.classList.contains("hidden"),
+);
+assert("gradient toggle triggers color change", panelColorChanges > 0);
+
+panelDoc.getElementById("el-color-swap")?.click();
+const swappedFill = panelParams.fillColor;
+const swappedOutline = panelParams.outlineColor;
+assert("color swap exchanges values", swappedFill !== "#87CEEB" || swappedOutline !== "#5eb0ff");
+
+console.log("\n=== Single-preview copy ===");
+const singlePlacement = { x: 0, y: 0, z: 0, angle: 0, t: 0.5, index: 0 };
+const previewCopy = defaultParams();
+previewCopy.pathInstanceLimit = 1;
+previewCopy.elementCopyEnabled = true;
+previewCopy.elementCopyCount = 3;
+const previewExpanded = expandPlacementsWithCopies([singlePlacement], previewCopy);
+assert("single-preview copy expands placements", previewExpanded.length === 4);
+assert(
+  "single-preview copy offsets",
+  Math.abs(previewExpanded[1].x - previewCopy.elementCopyOffsetX) < 0.01 ||
+    previewExpanded[1].x !== previewExpanded[0].x ||
+    previewCopy.elementCopyDistance > 0,
+);
 
 console.log(`\n=== Summary: ${passed} passed, ${failed} failed ===\n`);
 process.exit(failed > 0 ? 1 : 0);

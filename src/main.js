@@ -1,5 +1,5 @@
 import { defaultParams } from "./engine/params.js";
-import { SVG_PRESETS } from "./engine/presets.js";
+import { SVG_PRESETS, getElementPresets, isNoPathPreset } from "./engine/presets.js";
 import { parsePathSvg } from "./engine/path.js";
 import { parseUnitSvg, ViRenderer } from "./engine/renderer.js";
 import { createAppFlow } from "./engine/app-flow.js";
@@ -62,32 +62,80 @@ function updateReadyUi() {
   emptyState?.classList.toggle("hidden", vi.isReady());
 }
 
+const elementPresets = getElementPresets();
+
+function syncElementPresetIndexFromSvgPreset(svgPresetIndex) {
+  const match = elementPresets.findIndex((entry) => entry.svgPresetIndex === svgPresetIndex);
+  params.elementPresetIndex = match >= 0 ? match : null;
+}
+
 function applyPresetIndex(index) {
   const preset = SVG_PRESETS[index];
   if (!preset) return;
   params.svgPresetIndex = index;
-  vi.setPaths(parsePathSvg(preset.path));
+  if (isNoPathPreset(preset)) {
+    vi.setPaths([]);
+    params.pathInstanceLimit = 1;
+  } else {
+    vi.setPaths(parsePathSvg(preset.path));
+    params.pathInstanceLimit = null;
+  }
   if (!params.hasCustomUnit) {
-    vi.setUnit(parseUnitSvg(preset.unit));
+    vi.setUnit(parseUnitSvg(preset.unit, { outlineScale: params.outlineScale }));
+    syncElementPresetIndexFromSvgPreset(index);
   }
   updateReadyUi();
   vi.markStructureDirty();
+  seedMouseCenter();
+}
+
+/**
+ * @param {number} elementPresetIndex
+ */
+function applyElementPreset(elementPresetIndex) {
+  const entry = elementPresets[elementPresetIndex];
+  if (!entry) return;
+  const { preset, svgPresetIndex } = entry;
+  const unit = parseUnitSvg(preset.unit, { outlineScale: params.outlineScale });
+  if (!unit) return;
+
+  params.elementPresetIndex = elementPresetIndex;
+  vi.setUnit(unit);
+
+  if (isNoPathPreset(SVG_PRESETS[params.svgPresetIndex])) {
+    params.svgPresetIndex = svgPresetIndex;
+    params.hasCustomUnit = false;
+    document.getElementById("element-import-name")?.classList.add("hidden");
+  } else {
+    params.hasCustomUnit = true;
+    document.getElementById("element-import-name")?.classList.add("hidden");
+  }
+
+  updateReadyUi();
+  vi.markStructureDirty();
+  syncUiFromParams();
 }
 
 /** 啟動／重設：只顯示置中的單位元素，不沿路徑排列 */
 function loadInitialView() {
+  params.hasCustomUnit = false;
   const index = Math.max(0, Math.min(SVG_PRESETS.length - 1, params.svgPresetIndex ?? 0));
+  if (isNoPathPreset(SVG_PRESETS[index])) {
+    applyPresetIndex(index);
+    return;
+  }
   params.svgPresetIndex = index;
   const preset = SVG_PRESETS[index];
   if (!preset) return;
-  const unit = parseUnitSvg(preset.unit);
+  const unit = parseUnitSvg(preset.unit, { outlineScale: params.outlineScale });
   if (!unit) return;
   vi.setUnit(unit);
   vi.setPaths([]);
   params.pathInstanceLimit = 1;
-  params.hasCustomUnit = false;
+  syncElementPresetIndexFromSvgPreset(index);
   updateReadyUi();
   vi.markStructureDirty();
+  seedMouseCenter();
 }
 
 let uiLang = /** @type {import("./ui/i18n.js").UiLang} */ ("both");
@@ -99,14 +147,15 @@ const unitAssetLibrary = createUnitAssetLibrary();
  * @returns {boolean}
  */
 function applyUnitSvg(text, displayName) {
-  const unit = parseUnitSvg(text);
+  const unit = parseUnitSvg(text, { outlineScale: params.outlineScale });
   if (!unit) {
     const entry = UI_STRINGS["error.invalidElementSvg"];
     window.alert(formatLabel(entry, uiLang));
     return false;
   }
   params.hasCustomUnit = true;
-  const tinted = parseUnitSvg(text, { useSvgColors: true });
+  params.elementPresetIndex = null;
+  const tinted = parseUnitSvg(text, { useSvgColors: true, outlineScale: params.outlineScale });
   if (tinted?.fillColor) params.fillColor = tinted.fillColor;
   if (tinted?.outlineColor) params.outlineColor = tinted.outlineColor;
   vi.setUnit(unit);
@@ -123,7 +172,7 @@ function applyUnitSvg(text, displayName) {
 
 /** @param {string} text @param {string} displayName */
 async function saveUnitAsset(text, displayName) {
-  const tinted = parseUnitSvg(text, { useSvgColors: true });
+  const tinted = parseUnitSvg(text, { useSvgColors: true, outlineScale: params.outlineScale });
   try {
     await unitAssetLibrary.save({
       displayName,
@@ -140,11 +189,15 @@ async function saveUnitAsset(text, displayName) {
 }
 
 const designPanel = initDesignPanel(params, {
+  hasActivePath: () => vi.pathGroups.length > 0,
   onPresetChange: applyPresetIndex,
+  onElementPresetChange: applyElementPreset,
   onPathSvg: (text) => {
+    params.pathInstanceLimit = null;
     vi.setPaths(parsePathSvg(text));
     updateReadyUi();
     vi.markStructureDirty();
+    seedMouseCenter();
   },
   onUnitSvg: async (text, name) => {
     const ok = applyUnitSvg(text, name);
@@ -271,6 +324,8 @@ const elementImportPopover = initElementImportPopover({
 initUiLang(document.getElementById("lang-toggle"), (lang) => {
   uiLang = lang;
   elementImportPopover.refreshI18n();
+  designPanel.refreshShapePresetLabels(lang);
+  designPanel.refreshElementPresetLabels(lang);
 });
 
 initSidebarResize(document.querySelector(".composer-sidebar-resize"));

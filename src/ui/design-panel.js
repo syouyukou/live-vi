@@ -1,16 +1,29 @@
 import { defaultParams } from "../engine/params.js";
-import { SVG_PRESETS } from "../engine/presets.js";
+import { SVG_PRESETS, getElementPresets, isNoPathPreset } from "../engine/presets.js";
 import { ensureGradientStops, syncLegacyFillFromStops } from "../engine/gradient-map.js";
 import { bindColorPair, bindSliderPair } from "./bind-controls.js";
 import { initGradientMapEditor } from "./gradient-map-editor.js";
+import { formatLabel, UI_STRINGS } from "./i18n.js";
 
 /** @param {import("../engine/params.js").ViParams} params */
 export function initDesignPanel(params, hooks) {
   const shapeSelect = document.getElementById("shape-preset");
+  /** @param {import("./i18n.js").UiLang} lang */
+  const renderShapePresetOptions = (lang = "both") => {
+    if (!shapeSelect) return;
+    const selected = shapeSelect.value;
+    shapeSelect.innerHTML = SVG_PRESETS.map((p, i) => {
+      const label = p.label
+        ? formatLabel(p.label, lang)
+        : isNoPathPreset(p)
+          ? formatLabel(UI_STRINGS["preset.noPath"], lang)
+          : p.name;
+      return `<option value="${i}">${label}</option>`;
+    }).join("");
+    if (selected) shapeSelect.value = selected;
+  };
   if (shapeSelect) {
-    shapeSelect.innerHTML = SVG_PRESETS.map(
-      (p, i) => `<option value="${i}">${p.name}</option>`,
-    ).join("");
+    renderShapePresetOptions("both");
     shapeSelect.addEventListener("change", (e) => {
       hooks.onPresetChange(Number(e.target.value));
     });
@@ -25,6 +38,44 @@ export function initDesignPanel(params, hooks) {
       if (!file) return;
       hooks.onPathSvg(await file.text());
       pathFile.value = "";
+    });
+  }
+
+  const elementPresetGrid = document.getElementById("element-preset-grid");
+  const elementPresets = getElementPresets();
+
+  /** @param {import("./i18n.js").UiLang} lang */
+  const renderElementPresetGrid = (lang = "both") => {
+    if (!elementPresetGrid) return;
+    elementPresetGrid.innerHTML = elementPresets
+      .map(({ preset }, i) => {
+        const labelEntry = preset.elementLabel ?? preset.label ?? { en: preset.name, zh: preset.name };
+        const label = formatLabel(labelEntry, lang);
+        const thumb = preset.unit.replace(/fill="#111"/gi, 'fill="currentColor"');
+        const active = params.elementPresetIndex === i ? " is-active" : "";
+        return `<button type="button" class="composer-element-preset-btn${active}" data-element-preset="${i}" role="option" aria-selected="${params.elementPresetIndex === i}" title="${label}" aria-label="${label}">
+          <span class="composer-element-preset-thumb" aria-hidden="true">${thumb}</span>
+        </button>`;
+      })
+      .join("");
+  };
+
+  const syncElementPresetUi = () => {
+    if (!elementPresetGrid) return;
+    for (const btn of elementPresetGrid.querySelectorAll("[data-element-preset]")) {
+      const index = Number(btn.getAttribute("data-element-preset"));
+      const active = params.elementPresetIndex === index;
+      btn.classList.toggle("is-active", active);
+      btn.setAttribute("aria-selected", String(active));
+    }
+  };
+
+  if (elementPresetGrid) {
+    renderElementPresetGrid("both");
+    elementPresetGrid.addEventListener("click", (e) => {
+      const btn = /** @type {HTMLElement | null} */ (e.target)?.closest("[data-element-preset]");
+      if (!btn) return;
+      hooks.onElementPresetChange(Number(btn.getAttribute("data-element-preset")));
     });
   }
 
@@ -204,7 +255,7 @@ export function initDesignPanel(params, hooks) {
         get: () => params.pitch,
         set: (n) => {
           params.pitch = n;
-          params.pathInstanceLimit = null;
+          if (hooks.hasActivePath?.()) params.pathInstanceLimit = null;
         },
         toDisplay: (n) => n * 1000,
         fromDisplay: (d) => d / 1000,
@@ -310,6 +361,8 @@ export function initDesignPanel(params, hooks) {
   });
 
   return {
+    refreshShapePresetLabels: renderShapePresetOptions,
+    refreshElementPresetLabels: renderElementPresetGrid,
     syncFromParams() {
       params.elementGradientStops = ensureGradientStops(
         params.elementGradientStops,
@@ -317,6 +370,7 @@ export function initDesignPanel(params, hooks) {
         params.gradientColorEnd,
       );
       if (shapeSelect) shapeSelect.value = String(params.svgPresetIndex);
+      syncElementPresetUi();
       for (const b of bindings) b?.syncFromParams();
       for (const b of colorBindings) b?.syncFromParams();
       syncGradientUi();

@@ -197,6 +197,48 @@ body.composer-sidebar-resizing * {
   background: color-mix(in oklab, var(--input-bg) 80%, var(--text-muted));
 }
 
+.composer-element-preset-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+}
+
+.composer-element-preset-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  padding: 6px;
+  color: var(--text);
+  background: var(--input-bg);
+  border: 1px solid color-mix(in oklab, var(--border) 80%, transparent);
+  cursor: pointer;
+}
+
+.composer-element-preset-btn.is-active {
+  border-color: var(--text);
+  background: color-mix(in oklab, var(--input-bg) 70%, var(--text-muted));
+}
+
+.composer-element-preset-btn:hover {
+  background: color-mix(in oklab, var(--input-bg) 80%, var(--text-muted));
+}
+
+.composer-element-preset-thumb {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.composer-element-preset-thumb svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-height: 28px;
+}
+
 /* —— Element copy (dark panel, ref. Move/Copy) —— */
 .composer-copy-panel {
   margin-top: 4px;
@@ -289,6 +331,7 @@ body.composer-sidebar-resizing * {
 }
 
 .composer-preset-btn:focus-visible,
+.composer-element-preset-btn:focus-visible,
 .composer-reset:focus-visible,
 .composer-select:focus-visible,
 .composer-input:focus-visible,

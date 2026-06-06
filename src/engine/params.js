@@ -36,6 +36,8 @@ export function defaultParams() {
     shapePosX: -0.05,
     shapePosY: -0.04,
     svgPresetIndex: 0,
+    /** @type {number | null} */
+    elementPresetIndex: 0,
     hasCustomUnit: false,
 
     randomnessMultiply: 3.6,

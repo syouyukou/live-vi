@@ -1,5 +1,57 @@
+const EMPTY_PATH = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"></svg>`;
+
 /** 內建 SVG 預設庫（對應原站 svgPresetIndex 概念） */
 export const SVG_PRESETS = [
+  {
+    name: "無路徑",
+    label: { en: "No path", zh: "無路徑" },
+    elementLabel: { en: "Teardrop", zh: "水滴" },
+    noPath: true,
+    path: EMPTY_PATH,
+    unit: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 54"><path fill="#111" d="M 10 0 C 15 20 16.5 28 10 30 C 16.8 32 16 44 10 54 C 3.2 44 2.2 32 10 30 C 3.5 28 5 20 10 0 Z"/></svg>`,
+  },
+  {
+    name: "矩形",
+    label: { en: "Rectangle", zh: "矩形" },
+    noPath: true,
+    path: EMPTY_PATH,
+    unit: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect x="4" y="4" width="72" height="72" fill="#111"/></svg>`,
+  },
+  {
+    name: "新月",
+    label: { en: "Crescent", zh: "新月" },
+    noPath: true,
+    path: EMPTY_PATH,
+    unit: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 100"><path fill="#111" d="M 48 4 C 16 24, 12 76, 48 96 C 36 72, 34 28, 48 4 Z"/></svg>`,
+  },
+  {
+    name: "圓形",
+    label: { en: "Circle", zh: "圓形" },
+    noPath: true,
+    path: EMPTY_PATH,
+    unit: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><circle cx="40" cy="40" r="36" fill="#111"/></svg>`,
+  },
+  {
+    name: "三角形",
+    label: { en: "Triangle", zh: "三角形" },
+    noPath: true,
+    path: EMPTY_PATH,
+    unit: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 72"><polygon points="40,4 76,68 4,68" fill="#111"/></svg>`,
+  },
+  {
+    name: "橢圓",
+    label: { en: "Ellipse", zh: "橢圓" },
+    noPath: true,
+    path: EMPTY_PATH,
+    unit: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 48"><ellipse cx="50" cy="24" rx="46" ry="20" fill="#111"/></svg>`,
+  },
+  {
+    name: "星形",
+    label: { en: "Star", zh: "星形" },
+    noPath: true,
+    path: EMPTY_PATH,
+    unit: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><polygon points="40,4 47.6,29.2 74.4,29.2 52.4,45.6 60,70.8 40,54.4 20,70.8 27.6,45.6 5.6,29.2 32.4,29.2" fill="#111"/></svg>`,
+  },
   {
     name: "Tokyo",
     path: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 320">
@@ -38,10 +90,38 @@ export const SVG_PRESETS = [
     </svg>`,
     unit: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><circle cx="8" cy="8" r="6" fill="#111"/></svg>`,
   },
+  {
+    name: "直條",
+    label: { en: "Bar", zh: "直條" },
+    noPath: true,
+    path: EMPTY_PATH,
+    unit: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 12 80"><rect x="3" y="2" width="6" height="76" fill="#111"/></svg>`,
+  },
+  {
+    name: "箭頭",
+    label: { en: "Arrow", zh: "箭頭" },
+    noPath: true,
+    path: EMPTY_PATH,
+    unit: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 80"><polygon points="24,4 44,68 24,56 4,68" fill="#111"/></svg>`,
+  },
 ];
 
+/** @param {typeof SVG_PRESETS[number] | undefined} preset */
+export function isNoPathPreset(preset) {
+  return Boolean(preset?.noPath);
+}
+
+/** @typedef {{ preset: typeof SVG_PRESETS[number]; svgPresetIndex: number }} ElementPresetEntry */
+
+/** @returns {ElementPresetEntry[]} */
+export function getElementPresets() {
+  return SVG_PRESETS.map((preset, svgPresetIndex) => ({ preset, svgPresetIndex })).filter(({ preset }) =>
+    isNoPathPreset(preset),
+  );
+}
+
 export const APP_FLOW_SCENES = [
-  { name: "Intro", presetIndex: 0, colorModeIndex: 0, shapeModifyFactor: 0.06 },
-  { name: "Flow", presetIndex: 1, colorModeIndex: 2, shapeModifyFactor: 0.12 },
-  { name: "Dense", presetIndex: 3, colorModeIndex: 1, pitch: 0.025, randomnessMultiply: 5 },
+  { name: "Intro", presetIndex: 7, colorModeIndex: 0, shapeModifyFactor: 0.06 },
+  { name: "Flow", presetIndex: 8, colorModeIndex: 2, shapeModifyFactor: 0.12 },
+  { name: "Dense", presetIndex: 10, colorModeIndex: 1, pitch: 0.025, randomnessMultiply: 5 },
 ];
