@@ -34,6 +34,8 @@ export class ViRenderer {
       target: new THREE.Vector3(),
       direction: 0,
       directionValid: false,
+      speed: 0,
+      smoothedSpeed: 0,
     };
     this.scene = new THREE.Scene();
     this.camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 1000);
@@ -487,14 +489,17 @@ export class ViRenderer {
   }
 
   tick(dt) {
-    if (this.params.playing) this.time += dt * this.params.speed;
+    let timeSpeedMul = 1;
     if (this.params.mouseEnabled && this.mouse.active) {
       const prevX = this.mouse.world.x;
       const prevY = this.mouse.world.y;
-      this.mouse.world.lerp(this.mouse.target, 0.15);
+      const smoothing = this.params.mouseSmoothing ?? 0.15;
+      this.mouse.world.lerp(this.mouse.target, smoothing);
       const dx = this.mouse.world.x - prevX;
       const dy = this.mouse.world.y - prevY;
       const speed = Math.hypot(dx, dy);
+      this.mouse.speed = speed;
+      this.mouse.smoothedSpeed += (speed - this.mouse.smoothedSpeed) * 0.25;
       if (speed > 0.08) {
         const targetDir = Math.atan2(dy, dx);
         if (!this.mouse.directionValid) {
@@ -508,7 +513,13 @@ export class ViRenderer {
           );
         }
       }
+      const animBoost = this.params.mouseSpeedAnim ?? 0;
+      timeSpeedMul = 1 + animBoost * Math.min(this.mouse.smoothedSpeed * 2.5, 1);
+    } else {
+      this.mouse.speed = 0;
+      this.mouse.smoothedSpeed *= 0.9;
     }
+    if (this.params.playing) this.time += dt * this.params.speed * timeSpeedMul;
     if (this.params.handEnabled && this.params.handFollowPointer && this.mouse.active) {
       this.params.handPosX = this.mouse.world.x;
       this.params.handPosY = this.mouse.world.y;

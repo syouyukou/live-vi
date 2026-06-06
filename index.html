@@ -301,6 +301,15 @@
 
           <section class="composer-section" id="section-mouse">
             <h2 class="composer-section-title" data-i18n="section.mouse">Mouse</h2>
+            <label class="composer-field">
+              <span class="composer-label" data-i18n="label.mouseDirectionMode">Direction mode</span>
+              <select id="mouse-direction-mode" class="composer-select">
+                <option value="toward" data-i18n="mouseMode.toward">Toward cursor</option>
+                <option value="motion" data-i18n="mouseMode.motion">Along motion</option>
+                <option value="blend" selected data-i18n="mouseMode.blend">Blend</option>
+                <option value="perpendicular" data-i18n="mouseMode.perpendicular">Perpendicular</option>
+              </select>
+            </label>
             <label class="composer-field composer-field-check">
               <input type="checkbox" id="mouse-follow-direction" class="composer-check" checked />
               <span class="composer-label" data-i18n="label.mouseFollowDirection">Follow direction</span>
@@ -320,6 +329,41 @@
               <span class="composer-label" data-i18n="label.width">Width</span>
               <input type="number" id="mouse-width" class="composer-input" min="0" max="20" step="0.01" value="0.00" />
             </label>
+            <div class="composer-param">
+              <span class="composer-label" data-i18n="label.mouseSpeedStretch">Speed stretch</span>
+              <div class="composer-param-control">
+                <input type="range" id="mouse-speed-stretch-slider" class="composer-slider" min="0" max="2" step="0.05" value="0.80" />
+                <input type="number" id="mouse-speed-stretch-num" class="composer-num" min="0" max="2" step="0.05" value="0.80" />
+              </div>
+            </div>
+            <div class="composer-param">
+              <span class="composer-label" data-i18n="label.mouseSpeedScale">Speed scale</span>
+              <div class="composer-param-control">
+                <input type="range" id="mouse-speed-scale-slider" class="composer-slider" min="0" max="2" step="0.05" value="0.50" />
+                <input type="number" id="mouse-speed-scale-num" class="composer-num" min="0" max="2" step="0.05" value="0.50" />
+              </div>
+            </div>
+            <div class="composer-param">
+              <span class="composer-label" data-i18n="label.mouseTrailStretch">Trail stretch</span>
+              <div class="composer-param-control">
+                <input type="range" id="mouse-trail-stretch-slider" class="composer-slider" min="0" max="3" step="0.05" value="1.00" />
+                <input type="number" id="mouse-trail-stretch-num" class="composer-num" min="0" max="3" step="0.05" value="1.00" />
+              </div>
+            </div>
+            <div class="composer-param">
+              <span class="composer-label" data-i18n="label.mouseSmoothing">Smoothing</span>
+              <div class="composer-param-control">
+                <input type="range" id="mouse-smoothing-slider" class="composer-slider" min="0.05" max="1" step="0.05" value="0.15" />
+                <input type="number" id="mouse-smoothing-num" class="composer-num" min="0.05" max="1" step="0.05" value="0.15" />
+              </div>
+            </div>
+            <div class="composer-param">
+              <span class="composer-label" data-i18n="label.mouseSpeedAnim">Speed → animation</span>
+              <div class="composer-param-control">
+                <input type="range" id="mouse-speed-anim-slider" class="composer-slider" min="0" max="2" step="0.05" value="0.30" />
+                <input type="number" id="mouse-speed-anim-num" class="composer-num" min="0" max="2" step="0.05" value="0.30" />
+              </div>
+            </div>
           </section>
 
           <button type="button" id="reset" class="composer-reset"><span data-i18n="action.reset">Reset</span> <span aria-hidden="true">›</span></button>

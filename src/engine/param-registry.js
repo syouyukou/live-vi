@@ -47,6 +47,11 @@ export const PARAM_GROUPS = [
       { key: "scalingByMouseSensitivityLength", labelEn: "Mouse / Sensitivity / Length", labelJa: "マウス / 感度 / 長さ", min: 0, max: 5, step: 0.1 },
       { key: "scalingByMouseSensitivityWidth", labelEn: "Mouse / Sensitivity / Width", labelJa: "マウス / 感度 / 幅", min: 0, max: 5, step: 0.1 },
       { key: "mouseRadius", labelEn: "Mouse / Radius", labelJa: "マウス / 範囲", min: 40, max: 400, step: 5 },
+      { key: "mouseSpeedStretch", labelEn: "Mouse / Speed Stretch", labelJa: "マウス / 速度ストレッチ", min: 0, max: 2, step: 0.05 },
+      { key: "mouseSpeedScale", labelEn: "Mouse / Speed Scale", labelJa: "マウス / 速度スケール", min: 0, max: 2, step: 0.05 },
+      { key: "mouseTrailStretch", labelEn: "Mouse / Trail Stretch", labelJa: "マウス / トレイル", min: 0, max: 3, step: 0.05 },
+      { key: "mouseSmoothing", labelEn: "Mouse / Smoothing", labelJa: "マウス / スムージング", min: 0.05, max: 1, step: 0.05 },
+      { key: "mouseSpeedAnim", labelEn: "Mouse / Speed Anim", labelJa: "マウス / 速度アニメ", min: 0, max: 2, step: 0.05 },
     ],
   },
   {

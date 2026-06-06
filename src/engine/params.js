@@ -58,10 +58,17 @@ export function defaultParams() {
 
     mouseEnabled: true,
     mouseFollowDirection: true,
+    /** @type {"toward" | "motion" | "blend" | "perpendicular"} */
+    mouseDirectionMode: "blend",
     mouseDirectionInfluence: 0.85,
     scalingByMouseSensitivityLength: 10,
     scalingByMouseSensitivityWidth: 0,
     mouseRadius: 180,
+    mouseSpeedStretch: 0.8,
+    mouseSpeedScale: 0.5,
+    mouseTrailStretch: 1,
+    mouseSmoothing: 0.15,
+    mouseSpeedAnim: 0.3,
 
     handEnabled: false,
     handFollowPointer: true,

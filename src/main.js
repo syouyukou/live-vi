@@ -12,6 +12,8 @@ import { bindSliderPair } from "./ui/bind-controls.js";
 import { initSidebarResize } from "./ui/sidebar-resize.js";
 import { createUnitAssetLibrary } from "./lib/asset-library-idb.js";
 import { initElementImportPopover } from "./ui/element-import-popover.js";
+import { importConfig } from "./engine/config-io.js";
+import defaultConfig from "./config/default-config.json";
 
 const canvasHost = document.getElementById("canvas-host");
 if (!canvasHost) {
@@ -240,17 +242,31 @@ const designPanel = initDesignPanel(params, {
   onColorChange: () => vi.updateColors(),
 });
 
+function applyConfigToScene() {
+  syncUiFromParams();
+  applySensorType(params.sensorTypeIndex ?? 0);
+  applyPresetIndex(params.svgPresetIndex);
+  if (params.elementBEnabled) ensureElementBLoaded();
+  else vi.setUnitB(null);
+  applyCanvasLayout(params);
+  updateReadyUi();
+  seedMouseCenter();
+  vi.markStructureDirty();
+}
+
+function loadDefaultConfig() {
+  const fresh = defaults();
+  Object.assign(params, fresh);
+  importConfig(JSON.stringify(defaultConfig), params, timeline, appFlow);
+  params.handEnabled = false;
+  document.getElementById("element-import-name")?.classList.add("hidden");
+  applyConfigToScene();
+}
+
 const settingPanel = initSettingPanel(params, {
   timeline,
   appFlow,
-  onConfigImported: () => {
-    syncUiFromParams();
-    applyPresetIndex(params.svgPresetIndex);
-    if (params.elementBEnabled) ensureElementBLoaded();
-    else vi.setUnitB(null);
-    seedMouseCenter();
-    vi.markStructureDirty();
-  },
+  onConfigImported: applyConfigToScene,
   onCanvasChange: () => vi.resize(),
 });
 
@@ -265,13 +281,73 @@ const mouseDirectionControl = bindSliderPair(
   () => vi.markStructureDirty(),
 );
 
+const mouseSpeedStretchControl = bindSliderPair(
+  "mouse-speed-stretch",
+  {
+    get: () => params.mouseSpeedStretch,
+    set: (n) => {
+      params.mouseSpeedStretch = n;
+    },
+  },
+  () => vi.markStructureDirty(),
+);
+
+const mouseSpeedScaleControl = bindSliderPair(
+  "mouse-speed-scale",
+  {
+    get: () => params.mouseSpeedScale,
+    set: (n) => {
+      params.mouseSpeedScale = n;
+    },
+  },
+  () => vi.markStructureDirty(),
+);
+
+const mouseTrailStretchControl = bindSliderPair(
+  "mouse-trail-stretch",
+  {
+    get: () => params.mouseTrailStretch,
+    set: (n) => {
+      params.mouseTrailStretch = n;
+    },
+  },
+  () => vi.markStructureDirty(),
+);
+
+const mouseSmoothingControl = bindSliderPair(
+  "mouse-smoothing",
+  {
+    get: () => params.mouseSmoothing,
+    set: (n) => {
+      params.mouseSmoothing = n;
+    },
+  },
+);
+
+const mouseSpeedAnimControl = bindSliderPair(
+  "mouse-speed-anim",
+  {
+    get: () => params.mouseSpeedAnim,
+    set: (n) => {
+      params.mouseSpeedAnim = n;
+    },
+  },
+);
+
 function syncUiFromParams() {
   designPanel.syncFromParams();
   settingPanel.syncFromParams();
   syncSensorUi();
+  const mouseMode = document.getElementById("mouse-direction-mode");
+  if (mouseMode) mouseMode.value = params.mouseDirectionMode ?? "blend";
   const mouseFollow = document.getElementById("mouse-follow-direction");
   if (mouseFollow) mouseFollow.checked = params.mouseFollowDirection;
   mouseDirectionControl?.syncFromParams();
+  mouseSpeedStretchControl?.syncFromParams();
+  mouseSpeedScaleControl?.syncFromParams();
+  mouseTrailStretchControl?.syncFromParams();
+  mouseSmoothingControl?.syncFromParams();
+  mouseSpeedAnimControl?.syncFromParams();
   const mouseLen = document.getElementById("mouse-length");
   const mouseWid = document.getElementById("mouse-width");
   if (mouseLen) mouseLen.value = params.scalingByMouseSensitivityLength.toFixed(2);
@@ -279,16 +355,7 @@ function syncUiFromParams() {
 }
 
 function resetAll() {
-  const fresh = defaults();
-  Object.assign(params, fresh);
-  params.handEnabled = false;
-  applySensorType(fresh.sensorTypeIndex ?? 0);
-  document.getElementById("element-import-name")?.classList.add("hidden");
-  params.hasCustomUnit = false;
-  vi.setUnitB(null);
-  syncUiFromParams();
-  loadInitialView();
-  seedMouseCenter();
+  loadDefaultConfig();
 }
 
 function seedMouseCenter() {
@@ -297,6 +364,8 @@ function seedMouseCenter() {
     vi.mouse.world.set(0, 0, 0);
     vi.mouse.target.set(0, 0, 0);
     vi.mouse.directionValid = false;
+    vi.mouse.speed = 0;
+    vi.mouse.smoothedSpeed = 0;
     return;
   }
   const b = vi.getCameraBounds?.();
@@ -307,6 +376,8 @@ function seedMouseCenter() {
   vi.mouse.world.set(x, y, 0);
   vi.mouse.target.set(x, y, 0);
   vi.mouse.directionValid = false;
+  vi.mouse.speed = 0;
+  vi.mouse.smoothedSpeed = 0;
 }
 
 function showPanel(name) {
@@ -325,6 +396,13 @@ panelSelect?.addEventListener("change", () => {
 document.getElementById("sensor-type")?.addEventListener("change", (e) => {
   const index = SENSOR_TYPES.indexOf(/** @type {string} */ (e.target.value));
   if (index >= 0) applySensorType(index);
+});
+
+document.getElementById("mouse-direction-mode")?.addEventListener("change", (e) => {
+  params.mouseDirectionMode = /** @type {import("./engine/params.js").ViParams["mouseDirectionMode"]} */ (
+    e.target.value
+  );
+  vi.markStructureDirty();
 });
 
 document.getElementById("mouse-follow-direction")?.addEventListener("change", (e) => {
@@ -378,6 +456,9 @@ canvas.addEventListener("pointerdown", (e) => {
 });
 canvas.addEventListener("pointerleave", () => {
   vi.mouse.active = false;
+  vi.mouse.speed = 0;
+  vi.mouse.smoothedSpeed = 0;
+  vi.mouse.directionValid = false;
 });
 
 window.addEventListener("resize", () => {
@@ -399,11 +480,9 @@ if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
 }
 
 showPanel(panelSelect?.value ?? "design");
-loadInitialView();
-syncUiFromParams();
+loadDefaultConfig();
 vi.resize();
 vi.render();
-seedMouseCenter();
 requestAnimationFrame(loop);
 
 if (import.meta.env.DEV && new URLSearchParams(location.search).has("testCurve")) {

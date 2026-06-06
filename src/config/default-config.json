@@ -1,0 +1,148 @@
+{
+  "version": 1,
+  "params": {
+    "playing": true,
+    "speed": 1,
+    "seed": 42,
+    "elementAngleDeg": 293.5,
+    "baseScaleLength": 7.55,
+    "baseScaleWidth": 7.83,
+    "pitch": 0.0441,
+    "pathInstanceLimit": null,
+    "elementLineWidth": 1.5,
+    "elementOverlapMode": "separate",
+    "elementCopyEnabled": false,
+    "elementCopyCount": 1,
+    "elementCopyOffsetX": 0,
+    "elementCopyOffsetY": 0,
+    "elementCopyDistance": 0,
+    "elementCopyOffsetAngle": 0,
+    "elementCopyRotateStep": 0,
+    "elementCopyScaleStep": 100,
+    "elementBEnabled": false,
+    "elementBPresetIndex": 2,
+    "elementBHasCustomUnit": false,
+    "elementBOffsetX": -21,
+    "elementBOffsetY": -28.5,
+    "elementBRotateDeg": 27,
+    "elementBScale": 79,
+    "elementBFillColor": "#ff6b6b",
+    "elementBOutlineColor": "#e04040",
+    "sharedScaleDirectionX": 1,
+    "sharedScaleDirectionY": 1,
+    "sensorTypeIndex": 0,
+    "shapeModifyFactor": 0.35,
+    "shapeRotateFactor": 0.36,
+    "cameraZoomValue": 1.52,
+    "shapePosX": -0.05,
+    "shapePosY": -0.04,
+    "svgPresetIndex": 2,
+    "elementPresetIndex": 2,
+    "hasCustomUnit": false,
+    "randomnessMultiply": 3.6,
+    "randomnessSensitivityLength": 1,
+    "randomnessSensitivityWidth": 1,
+    "mouseEnabled": true,
+    "mouseFollowDirection": true,
+    "mouseDirectionMode": "blend",
+    "mouseDirectionInfluence": 0.85,
+    "scalingByMouseSensitivityLength": 10,
+    "scalingByMouseSensitivityWidth": 0,
+    "mouseRadius": 180,
+    "mouseSpeedStretch": 0.8,
+    "mouseSpeedScale": 0.5,
+    "mouseTrailStretch": 1,
+    "mouseSmoothing": 0.15,
+    "mouseSpeedAnim": 0.3,
+    "handEnabled": false,
+    "handFollowPointer": true,
+    "handPosX": 0,
+    "handPosY": 0,
+    "handInfluence": 1.2,
+    "handRadius": 160,
+    "colorModeIndex": 0,
+    "strokeColor": "#111111",
+    "fillColor": "#87CEEB",
+    "gradientColorEnd": "#3366ff",
+    "elementGradientStops": [
+      {
+        "id": "gs1",
+        "position": 0,
+        "color": "#39c837",
+        "midpoint": 0.5
+      },
+      {
+        "id": "gs2",
+        "position": 0.5,
+        "color": "#111111",
+        "midpoint": 0.5
+      },
+      {
+        "id": "gs3",
+        "position": 1,
+        "color": "#3366ff",
+        "midpoint": 0.5
+      }
+    ],
+    "elementUseGradient": false,
+    "outlineColor": "#5eb0ff",
+    "outlineScale": 1.14,
+    "bgColor": "#ffffff",
+    "micSensitivity": 0.1,
+    "soundEnabled": false,
+    "enableSecondLayer": false,
+    "secondLayerOpacity": 0.55,
+    "secondLayerPhase": 0.5,
+    "secondPresetIndex": 1,
+    "echoLayers": 0,
+    "echoStep": 3,
+    "echoOpacity": 0.3,
+    "canvasWidth": 540,
+    "canvasHeight": 540,
+    "canvasAspectPreset": "1:1"
+  },
+  "timeline": {
+    "name": "VI Timeline",
+    "duration": 8,
+    "params": [
+      {
+        "id": "shapeModifyFactor",
+        "keyframes": [
+          { "time": 0, "value": 0.06 },
+          { "time": 8, "value": 0.14 }
+        ]
+      },
+      {
+        "id": "cameraZoomValue",
+        "keyframes": [
+          { "time": 0, "value": 1 },
+          { "time": 8, "value": 1.2 }
+        ]
+      }
+    ]
+  },
+  "appFlow": {
+    "index": 0,
+    "scenes": [
+      {
+        "name": "Intro",
+        "presetIndex": 7,
+        "colorModeIndex": 0,
+        "shapeModifyFactor": 0.06
+      },
+      {
+        "name": "Flow",
+        "presetIndex": 8,
+        "colorModeIndex": 2,
+        "shapeModifyFactor": 0.12
+      },
+      {
+        "name": "Dense",
+        "presetIndex": 10,
+        "colorModeIndex": 1,
+        "pitch": 0.025,
+        "randomnessMultiply": 5
+      }
+    ]
+  }
+}
