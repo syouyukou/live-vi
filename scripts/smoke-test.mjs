@@ -111,6 +111,8 @@ assert("parsePathSvg keeps open curve fixture", parsePathSvg(curveSvg).length ==
 
 const kanjiSvg = readFileSync(join(root, "public/test-fixtures/kanji-li-6-2x.svg"), "utf8");
 assert("parsePathSvg keeps compound path subpaths", parsePathSvg(kanjiSvg).length >= 6);
+const liPreset = SVG_PRESETS.find((p) => p.name === "里");
+assert("里 preset path parses", liPreset && parsePathSvg(liPreset.path).length >= 6);
 const kanjiUnit = parseUnitSvg(kanjiSvg);
 assert("parseUnitSvg loads compound kanji fixture", kanjiUnit !== null);
 assert(

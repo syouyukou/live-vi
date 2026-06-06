@@ -1,3 +1,5 @@
+import { KANJI_LI_PATH } from "./preset-paths/kanji-li-6-2x.path.js";
+
 const EMPTY_PATH = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"></svg>`;
 
 /** 內建 SVG 預設庫（對應原站 svgPresetIndex 概念） */
@@ -103,6 +105,12 @@ export const SVG_PRESETS = [
     noPath: true,
     path: EMPTY_PATH,
     unit: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 80"><polygon points="24,4 44,68 24,56 4,68" fill="#111"/></svg>`,
+  },
+  {
+    name: "里",
+    label: { en: "Li", zh: "里" },
+    path: KANJI_LI_PATH,
+    unit: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 100"><path fill="#111" d="M 48 4 C 16 24, 12 76, 48 96 C 36 72, 34 28, 48 4 Z"/></svg>`,
   },
 ];
 
