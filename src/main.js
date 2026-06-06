@@ -72,9 +72,10 @@ function syncElementPresetIndexFromSvgPreset(svgPresetIndex) {
 }
 
 function applyPresetIndex(index) {
-  const preset = SVG_PRESETS[index];
+  const idx = Math.max(0, Math.min(SVG_PRESETS.length - 1, index));
+  const preset = SVG_PRESETS[idx];
   if (!preset) return;
-  params.svgPresetIndex = index;
+  params.svgPresetIndex = idx;
   if (isNoPathPreset(preset)) {
     vi.setPaths([]);
     params.pathInstanceLimit = 1;
@@ -84,7 +85,7 @@ function applyPresetIndex(index) {
   }
   if (!params.hasCustomUnit) {
     vi.setUnit(parseUnitSvg(preset.unit, { outlineScale: params.outlineScale }));
-    syncElementPresetIndexFromSvgPreset(index);
+    syncElementPresetIndexFromSvgPreset(idx);
   }
   updateReadyUi();
   vi.markStructureDirty();
@@ -268,6 +269,9 @@ const settingPanel = initSettingPanel(params, {
   appFlow,
   onConfigImported: applyConfigToScene,
   onCanvasChange: () => vi.resize(),
+  exportPng: () => vi.exportPng(),
+  exportSvg: () => vi.exportSvg(),
+  getCanvas: () => vi.getCanvas(),
 });
 
 const mouseDirectionControl = bindSliderPair(

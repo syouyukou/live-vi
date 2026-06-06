@@ -7,6 +7,27 @@ export const UI_STRINGS = {
   "section.importExport": { en: "Import & Export", zh: "匯入與匯出" },
   "action.importJson": { en: "Import .json", zh: "匯入 .json" },
   "action.exportJson": { en: "Export .json", zh: "匯出 .json" },
+  "section.mediaExport": { en: "Export media", zh: "匯出媒體" },
+  "action.exportPng": { en: "Export PNG", zh: "匯出 PNG" },
+  "action.exportSvg": { en: "Export SVG", zh: "匯出 SVG" },
+  "action.recordWebm": { en: "Record WebM", zh: "錄製 WebM" },
+  "action.stopRecord": { en: "Stop & download", zh: "停止並下載" },
+  "hint.recording": {
+    en: "Recording… move the mouse or let animation play.",
+    zh: "錄製中… 移動滑鼠或讓動畫播放。",
+  },
+  "error.exportNotReady": {
+    en: "Nothing to export yet. Load a shape and element first.",
+    zh: "尚無可匯出內容，請先載入形狀與元素。",
+  },
+  "error.recorderUnsupported": {
+    en: "WebM recording is not supported in this browser.",
+    zh: "此瀏覽器不支援 WebM 錄影。",
+  },
+  "error.recordEmpty": {
+    en: "Recording was empty. Try recording a bit longer.",
+    zh: "錄影檔為空，請錄製久一點再試。",
+  },
   "section.canvasSize": { en: "Canvas Size", zh: "畫布尺寸" },
   "label.preset": { en: "Preset", zh: "預設值" },
   "preset.16x9": { en: "16:9", zh: "16:9" },

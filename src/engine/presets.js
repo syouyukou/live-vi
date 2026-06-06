@@ -108,7 +108,7 @@ export const SVG_PRESETS = [
   },
   {
     name: "里",
-    label: { en: "Li", zh: "里" },
+    label: { en: "Li (里)", zh: "里" },
     path: KANJI_LI_PATH,
     unit: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 100"><path fill="#111" d="M 48 4 C 16 24, 12 76, 48 96 C 36 72, 34 28, 48 4 Z"/></svg>`,
   },

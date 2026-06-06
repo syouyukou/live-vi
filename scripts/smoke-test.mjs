@@ -291,6 +291,23 @@ for (const id of panelIds) {
 }
 assert("overlap buttons", panelDoc.querySelectorAll("[data-el-overlap]").length === 2);
 
+console.log("\n=== Setting panel export DOM ===");
+const exportIds = [
+  "export-png",
+  "export-svg",
+  "export-record-start",
+  "export-record-stop",
+  "record-status",
+];
+for (const id of exportIds) {
+  assert(`index.html #${id}`, panelDoc.getElementById(id) != null);
+}
+
+console.log("\n=== Recorder ===");
+const { CanvasRecorder, pickRecorderMimeType } = await import(join(root, "src/engine/recorder.js"));
+assert("pickRecorderMimeType is fn", typeof pickRecorderMimeType === "function");
+assert("CanvasRecorder.isSupported is fn", typeof CanvasRecorder.isSupported === "function");
+
 console.log("\n=== Design panel bindings ===");
 globalThis.window = panelDom.window;
 globalThis.document = panelDom.window.document;
