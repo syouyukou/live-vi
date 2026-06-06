@@ -65,10 +65,12 @@ description: >-
 ## Verification
 
 ```bash
+npm run test:smoke
 npm run build
 npm run dev
 ```
 
+- Smoke tests pass (`scripts/smoke-test.mjs`)
 - Canvas shows instanced units on path
 - Timeline scrub changes `shapeModifyFactor` / zoom keyframes
-- Export PNG/SVG/JSON works
+- Export PNG/SVG/WebM/JSON works

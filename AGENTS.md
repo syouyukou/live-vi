@@ -13,7 +13,10 @@ Use skill **`vi-composer-web`** for all work in this repo.
 ```bash
 npm run dev
 npm run build
+npm run test:smoke
 ```
+
+After code changes, run `npm run test:smoke` before finishing (see `.cursor/rules/smoke-test.mdc`).
 
 ## Docs
 

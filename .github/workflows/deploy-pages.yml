@@ -27,6 +27,9 @@ jobs:
 
       - run: npm ci
 
+      - name: Smoke test
+        run: npm run test:smoke
+
       - name: Build for GitHub Pages
         run: npm run build
         env:

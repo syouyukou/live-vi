@@ -1,0 +1,18 @@
+---
+description: Run smoke tests after code changes in live-vi
+alwaysApply: true
+---
+
+# Smoke test before finishing
+
+After making code changes in this repo, run:
+
+```bash
+npm run test:smoke
+```
+
+- Run it before telling the user the task is done.
+- If tests fail, fix the issue and re-run until they pass.
+- For larger changes, also run `npm run build`.
+
+Do not skip smoke tests when you edited `src/`, `index.html`, or `scripts/smoke-test.mjs`.
