@@ -11,18 +11,27 @@ export const UI_STRINGS = {
   "action.exportPng": { en: "Export PNG", zh: "匯出 PNG" },
   "action.exportSvg": { en: "Export SVG", zh: "匯出 SVG" },
   "action.recordWebm": { en: "Record WebM", zh: "錄製 WebM" },
+  "action.recordMp4": { en: "Record MP4", zh: "錄製 MP4" },
   "action.stopRecord": { en: "Stop & download", zh: "停止並下載" },
   "hint.recording": {
     en: "Recording… move the mouse or let animation play.",
     zh: "錄製中… 移動滑鼠或讓動畫播放。",
+  },
+  "hint.convertingMp4": {
+    en: "Converting to MP4… this may take a moment.",
+    zh: "正在轉換為 MP4… 請稍候。",
   },
   "error.exportNotReady": {
     en: "Nothing to export yet. Load a shape and element first.",
     zh: "尚無可匯出內容，請先載入形狀與元素。",
   },
   "error.recorderUnsupported": {
-    en: "WebM recording is not supported in this browser.",
-    zh: "此瀏覽器不支援 WebM 錄影。",
+    en: "Video recording is not supported in this browser.",
+    zh: "此瀏覽器不支援影片錄製。",
+  },
+  "error.transcodeFailed": {
+    en: "Could not convert the recording to MP4.",
+    zh: "無法將錄影轉換為 MP4。",
   },
   "error.recordEmpty": {
     en: "Recording was empty. Try recording a bit longer.",

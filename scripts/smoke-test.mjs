@@ -295,7 +295,8 @@ console.log("\n=== Setting panel export DOM ===");
 const exportIds = [
   "export-png",
   "export-svg",
-  "export-record-start",
+  "export-record-webm-start",
+  "export-record-mp4-start",
   "export-record-stop",
   "record-status",
 ];
@@ -304,9 +305,17 @@ for (const id of exportIds) {
 }
 
 console.log("\n=== Recorder ===");
-const { CanvasRecorder, pickRecorderMimeType } = await import(join(root, "src/engine/recorder.js"));
+const {
+  CanvasRecorder,
+  pickRecorderMimeType,
+  isRecordFormatSupported,
+  outputExtensionForMime,
+} = await import(join(root, "src/engine/recorder.js"));
 assert("pickRecorderMimeType is fn", typeof pickRecorderMimeType === "function");
 assert("CanvasRecorder.isSupported is fn", typeof CanvasRecorder.isSupported === "function");
+assert("isRecordFormatSupported is fn", typeof isRecordFormatSupported === "function");
+assert("webm extension", outputExtensionForMime("video/webm") === "webm");
+assert("mp4 extension", outputExtensionForMime("video/mp4") === "mp4");
 
 console.log("\n=== Design panel bindings ===");
 globalThis.window = panelDom.window;

@@ -20,6 +20,8 @@ Planning informed by: **vi-composer-web**, **ui-ux-pro-max**, **web-design-guide
 
 ## Phase B — Fidelity (3–5 days)
 
+> 動畫功能完整規劃見 [ANIMATION-PLAN.md](./ANIMATION-PLAN.md)
+
 | Task | Notes |
 |------|--------|
 | Collapsible animation match原站 | Radix-like chevron |
